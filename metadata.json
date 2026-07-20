@@ -1,0 +1,6 @@
+{
+  "name": "Invoice Analyzer",
+  "description": "A clean, professional tool to extract vendor details, dates, totals, itemized lists, and categories from invoices using Gemini API.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
