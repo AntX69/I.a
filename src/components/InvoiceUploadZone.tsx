@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Upload, FileText, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { Language, TRANSLATIONS } from "../types";
 
 interface InvoiceUploadZoneProps {
@@ -8,6 +8,22 @@ interface InvoiceUploadZoneProps {
   isAnalyzing: boolean;
 }
 
+const LOADING_STEPS_KA = [
+  "ვკითხულობთ დოკუმენტს...",
+  "ვამოწმებთ მონაცემებს...",
+  "ვამუშავებთ ცხრილებს...",
+  "ვაჯგუფებთ კატეგორიებად...",
+  "ვუკავშირდებით Gemini AI-ს..."
+];
+
+const LOADING_STEPS_EN = [
+  "Reading document...",
+  "Verifying data...",
+  "Processing tables...",
+  "Grouping into categories...",
+  "Connecting to Gemini AI..."
+];
+
 export default function InvoiceUploadZone({
   language,
   onUpload,
@@ -15,8 +31,20 @@ export default function InvoiceUploadZone({
 }: InvoiceUploadZoneProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stepIndex, setStepIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = TRANSLATIONS[language];
+
+  useEffect(() => {
+    if (!isAnalyzing) {
+      setStepIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setStepIndex((prev) => (prev + 1) % 5);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [isAnalyzing]);
 
   const processFile = (file: File) => {
     setError(null);
@@ -100,12 +128,12 @@ export default function InvoiceUploadZone({
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={isAnalyzing ? undefined : triggerFileInput}
-        className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-3xl p-8 text-center transition-all duration-300 ${
+        className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-3xl p-8 text-center transition-all duration-200 ${
           isAnalyzing
-            ? "bg-slate-50/40 backdrop-blur-sm border-slate-200 cursor-not-allowed"
+            ? "bg-indigo-50/10 border-indigo-200/50 cursor-not-allowed"
             : isDragActive
-            ? "border-indigo-500 bg-indigo-50/50 scale-[1.01] cursor-pointer"
-            : "border-slate-200 bg-white/40 backdrop-blur-sm hover:border-indigo-400 hover:bg-white/60 cursor-pointer"
+            ? "border-indigo-500 bg-indigo-50/50 scale-[1.01] shadow-lg cursor-pointer"
+            : "border-slate-200 bg-white/40 backdrop-blur-sm hover:border-indigo-400 hover:bg-white/60 hover:scale-[1.01] hover:shadow-xl cursor-pointer"
         }`}
       >
         <input
@@ -118,13 +146,23 @@ export default function InvoiceUploadZone({
         />
 
         {isAnalyzing ? (
-          <div className="flex flex-col items-center space-y-4 animate-pulse">
-            <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-600">
-              <Loader2 className="w-10 h-10 animate-spin" />
+          <div className="flex flex-col items-center space-y-5 py-4">
+            {/* Custom glowing core spinning Indigo loader */}
+            <div className="relative flex items-center justify-center w-20 h-20">
+              <div className="absolute inset-0 rounded-full bg-indigo-500/20 animate-ping" />
+              <div className="absolute inset-1 rounded-full border-4 border-indigo-100 border-t-indigo-600 animate-spin" />
+              <div className="absolute inset-4 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-300">
+                <Sparkles className="w-6 h-6 animate-pulse" />
+              </div>
             </div>
-            <div>
-              <p className="font-semibold text-slate-950 text-lg">
+            
+            <div className="space-y-1.5 max-w-sm mx-auto">
+              <p className="font-extrabold text-slate-900 text-lg tracking-tight">
                 {t.analyzing}
+              </p>
+              {/* Cycling micro-text */}
+              <p className="text-sm font-bold text-indigo-600 min-h-[20px] animate-pulse">
+                {language === "ka" ? LOADING_STEPS_KA[stepIndex] : LOADING_STEPS_EN[stepIndex]}
               </p>
               <p className="text-xs text-slate-400 mt-1">
                 {language === "ka"
@@ -149,7 +187,7 @@ export default function InvoiceUploadZone({
             <button
               id="browse-btn"
               type="button"
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm cursor-pointer"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] hover:shadow-lg hover:shadow-indigo-500/20 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 triggerFileInput();
