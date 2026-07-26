@@ -45,15 +45,30 @@ export async function apiFetch<T = any>(
     headers,
   });
 
+  const contentType = response.headers.get("content-type");
+  const isJson = contentType && contentType.includes("application/json");
+
   if (!response.ok) {
     let errorMessage = `HTTP error! Status: ${response.status}`;
-    try {
-      const errBody = await response.json();
-      if (errBody && errBody.error) {
-        errorMessage = errBody.error;
-      }
-    } catch (_) {}
+    if (isJson) {
+      try {
+        const errBody = await response.json();
+        if (errBody && errBody.error) {
+          errorMessage = errBody.error;
+        }
+      } catch (_) {}
+    } else {
+      try {
+        const text = await response.text();
+        if (text) errorMessage = text.slice(0, 150);
+      } catch (_) {}
+    }
     throw new Error(errorMessage);
+  }
+
+  if (!isJson) {
+    const text = await response.text();
+    throw new Error(`Server returned unexpected response (${contentType || "text/html"}): ${text.slice(0, 150)}`);
   }
 
   return response.json() as Promise<T>;

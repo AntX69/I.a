@@ -56,17 +56,25 @@ export default function RoleSimulator({
       descKa: "მხოლოდ დოკუმენტების ატვირთვა. მფლობელის მიერ დაწესებული მკაცრი ლიმიტები.",
       descEn: "Can only upload new receipts. Highly restricted client views.",
     },
+    member: {
+      titleKa: "გუნდის წევრი",
+      titleEn: "Team Member",
+      descKa: "ინდივიდუალური უფლებებით აღჭურვილი თანამშრომელი.",
+      descEn: "Team member with individually configured permissions.",
+    },
   };
 
   const handleTogglePermission = (role: UserRole, key: keyof RolePermissions) => {
     // Only allow changing permissions if the active simulated role is Admin/CEO
     if (activeRole !== "admin") return;
 
+    const currentPerms = rolePermissions[role] || { canUpload: true, viewAnalytics: true, manageBudgets: false, canDelete: false };
+
     const updated = {
       ...rolePermissions,
       [role]: {
-        ...rolePermissions[role],
-        [key]: !rolePermissions[role][key],
+        ...currentPerms,
+        [key]: !currentPerms[key],
       },
     };
     onPermissionsChanged(updated);
@@ -176,7 +184,8 @@ export default function RoleSimulator({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {PERMISSION_DEFS.map((def) => {
-                const isAllowed = rolePermissions[activeRole][def.key];
+                const activePerms = rolePermissions[activeRole] || { canUpload: true, viewAnalytics: true, manageBudgets: false, canDelete: false };
+                const isAllowed = activePerms[def.key];
                 
                 return (
                   <div 

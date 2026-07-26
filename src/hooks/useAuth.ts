@@ -1,11 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiFetch, getSessionToken, setSessionToken } from "../lib/api";
 
+import { UserPermissions } from "../types";
+
 export interface AuthUser {
   email: string;
   company_id: string | null;
-  role: "admin" | "accountant" | "purchaser" | null;
+  company_name: string | null;
+  role: "admin" | "accountant" | "purchaser" | "member" | null;
+  position: string | null;
+  permissions: UserPermissions;
   is_platform_owner: boolean;
+  status: "active" | "revoked";
 }
 
 export function useAuth() {

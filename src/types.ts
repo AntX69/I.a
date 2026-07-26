@@ -20,7 +20,39 @@ export interface ExtractedInvoice {
   uploadedAt: string;
 }
 
-export type UserRole = "admin" | "accountant" | "purchaser";
+export type UserRole = "admin" | "accountant" | "purchaser" | "member";
+
+export interface UserPermissions {
+  uploadInvoices: boolean;
+  deleteInvoices: boolean;
+  editBudgets: boolean;
+  viewAnalytics: boolean;
+  manageTeam: boolean;
+  manageBilling: boolean;
+}
+
+export interface TeamMember {
+  email: string;
+  name?: string;
+  company_id: string | null;
+  company_name: string | null;
+  role: UserRole | null;
+  position: string;
+  permissions: UserPermissions;
+  is_platform_owner: boolean;
+  status: "active" | "revoked";
+}
+
+export interface PendingInvite {
+  token: string;
+  email: string;
+  name: string;
+  position: string;
+  company_id: string;
+  permissions: UserPermissions;
+  expires_at: string;
+  status: "pending" | "accepted" | "revoked";
+}
 
 export interface RolePermissions {
   canUpload: boolean;

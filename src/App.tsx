@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { apiFetch } from "./lib/api";
 import { 
@@ -41,7 +41,8 @@ import {
   CATEGORY_COLORS, 
   TRANSLATIONS,
   UserRole,
-  RolePermissions
+  RolePermissions,
+  UserPermissions
 } from "./types";
 import InvoiceUploadZone from "./components/InvoiceUploadZone";
 import InvoiceSummaryCards from "./components/InvoiceSummaryCards";
@@ -56,8 +57,20 @@ import RoleSimulator from "./components/RoleSimulator";
 import ToastContainer, { Toast } from "./components/ToastContainer";
 import NotFoundView from "./components/NotFoundView";
 import SettingsMockup from "./components/SettingsMockup";
+import TeamManagement from "./components/TeamManagement";
+import AcceptInviteView from "./components/AcceptInviteView";
 
 export default function App() {
+  // Invite token detection from URL
+  const [inviteToken, setInviteToken] = useState<string | null>(() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/invite/")) {
+      return path.substring("/invite/".length);
+    }
+    const params = new URLSearchParams(window.location.search);
+    return params.get("invite");
+  });
+
   // States
   const [language, setLanguage] = useState<Language>("ka");
   const [invoices, setInvoices] = useState<ExtractedInvoice[]>([]);
@@ -97,8 +110,22 @@ export default function App() {
     }
   }, [isAuthenticated, user?.company_id]);
 
-  const [currentView, setCurrentView] = useState<"landing" | "login" | "signup" | "create-company" | "settings" | "not-found" | "dashboard">("landing");
+  const [currentView, setCurrentView] = useState<"landing" | "login" | "signup" | "create-company" | "settings" | "team" | "not-found" | "dashboard">("landing");
   const [placeholderModal, setPlaceholderModal] = useState<"terms" | "privacy" | null>(null);
+
+  const rawPermissions: UserPermissions = user?.permissions || {
+    uploadInvoices: true,
+    deleteInvoices: user?.role === "admin" || !!user?.is_platform_owner,
+    editBudgets: user?.role === "admin" || !!user?.is_platform_owner,
+    viewAnalytics: true,
+    manageTeam: !!user?.is_platform_owner,
+    manageBilling: user?.role === "admin" || !!user?.is_platform_owner,
+  };
+
+  const userPermissions: UserPermissions = {
+    ...rawPermissions,
+    manageTeam: !!user?.is_platform_owner && !!rawPermissions.manageTeam,
+  };
 
   // Keep currentView synchronized with authentication state
   useEffect(() => {
@@ -279,19 +306,40 @@ export default function App() {
     } else if (activePlan === "single") {
       setActiveRole("admin");
     }
-  }, [user, activePlan]);
+    if (currentView === "team" && (activePlan !== "multi" || !user?.is_platform_owner || !userPermissions.manageTeam)) {
+      setCurrentView("dashboard");
+    }
+  }, [user, activePlan, currentView]);
+
+  const defaultRolePermissions: Record<UserRole, RolePermissions> = {
+    admin: { canUpload: true, viewAnalytics: true, manageBudgets: true, canDelete: true },
+    accountant: { canUpload: true, viewAnalytics: true, manageBudgets: true, canDelete: false },
+    purchaser: { canUpload: true, viewAnalytics: false, manageBudgets: false, canDelete: false },
+    member: { canUpload: true, viewAnalytics: true, manageBudgets: false, canDelete: false },
+  };
 
   const [rolePermissions, setRolePermissions] = useState<Record<UserRole, RolePermissions>>(() => {
     try {
       const saved = localStorage.getItem("invoice_analyzer_role_permissions_v1");
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...defaultRolePermissions, ...parsed };
+      }
     } catch (_) {}
-    return {
-      admin: { canUpload: true, viewAnalytics: true, manageBudgets: true, canDelete: true },
-      accountant: { canUpload: true, viewAnalytics: true, manageBudgets: true, canDelete: false },
-      purchaser: { canUpload: true, viewAnalytics: false, manageBudgets: false, canDelete: false },
-    };
+    return defaultRolePermissions;
   });
+
+  const currentRolePermissions: RolePermissions = useMemo(() => {
+    if (user && user.permissions) {
+      return {
+        canUpload: user.permissions.uploadInvoices,
+        viewAnalytics: user.permissions.viewAnalytics,
+        manageBudgets: user.permissions.editBudgets,
+        canDelete: user.permissions.deleteInvoices,
+      };
+    }
+    return rolePermissions[activeRole] || defaultRolePermissions[activeRole] || defaultRolePermissions.admin;
+  }, [rolePermissions, activeRole, user]);
 
   useEffect(() => {
     try {
@@ -402,6 +450,12 @@ export default function App() {
           fileName,
         }),
       });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(text.slice(0, 200) || "Server returned an unexpected non-JSON response.");
+      }
 
       const result = await response.json();
 
@@ -1346,7 +1400,7 @@ export default function App() {
   }
 
   // 3. CREATE YOUR COMPANY STAGE (Auth flow Step 4 - Split Screen with Pricing Selection)
-  if (currentUser && !userCompany) {
+  if (currentUser && !user?.company_id) {
     return (
       <div className="min-h-screen bg-white flex flex-col md:flex-row font-sans relative selection:bg-indigo-500 selection:text-white">
         {/* Left Side: Dark Indigo Brand Presentation */}
@@ -1795,6 +1849,22 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Team Management Button (Only on Multi Plan) */}
+              {currentUser && userPermissions.manageTeam && activePlan === "multi" && (
+                <button
+                  onClick={() => setCurrentView(currentView === "team" ? "dashboard" : "team")}
+                  className={`px-3 py-1.5 border rounded-full transition-all cursor-pointer shadow-sm shrink-0 flex items-center justify-center gap-1.5 text-xs font-bold ${
+                    currentView === "team"
+                      ? "bg-indigo-50 border-indigo-200 text-indigo-600"
+                      : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200/50"
+                  }`}
+                  title={language === "ka" ? "გუნდის მართვა" : "Team Management"}
+                >
+                  <Users className="w-4 h-4 text-indigo-600" />
+                  <span className="hidden sm:inline">{language === "ka" ? "გუნდი" : "Team"}</span>
+                </button>
+              )}
+
               {/* Settings Page Mockup Button */}
               {currentUser && (
                 <button
@@ -2071,34 +2141,52 @@ export default function App() {
               </div>
             </div>
 
-            {/* Settings & Logout for Mobile */}
+            {/* Settings & Team & Logout for Mobile */}
             {currentUser && (
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                <button
-                  onClick={() => {
-                    setCurrentView(currentView === "settings" ? "dashboard" : "settings");
-                    setShowMobileMenu(false);
-                  }}
-                  className={`flex-1 py-2 px-3 border rounded-xl transition-all cursor-pointer shadow-sm text-xs font-bold flex items-center justify-center gap-2 ${
-                    currentView === "settings"
-                      ? "bg-indigo-50 border-indigo-200 text-indigo-600"
-                      : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200/50"
-                  }`}
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>{language === "ka" ? "პარამეტრები" : "Settings"}</span>
-                </button>
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                {userPermissions.manageTeam && activePlan === "multi" && (
+                  <button
+                    onClick={() => {
+                      setCurrentView(currentView === "team" ? "dashboard" : "team");
+                      setShowMobileMenu(false);
+                    }}
+                    className={`w-full py-2 px-3 border rounded-xl transition-all cursor-pointer shadow-sm text-xs font-bold flex items-center justify-center gap-2 ${
+                      currentView === "team"
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-600"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200/50"
+                    }`}
+                  >
+                    <Users className="w-4 h-4 text-indigo-600" />
+                    <span>{language === "ka" ? "გუნდის მართვა" : "Team Management"}</span>
+                  </button>
+                )}
+                <div className="flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => {
+                      setCurrentView(currentView === "settings" ? "dashboard" : "settings");
+                      setShowMobileMenu(false);
+                    }}
+                    className={`flex-1 py-2 px-3 border rounded-xl transition-all cursor-pointer shadow-sm text-xs font-bold flex items-center justify-center gap-2 ${
+                      currentView === "settings"
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-600"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200/50"
+                    }`}
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>{language === "ka" ? "პარამეტრები" : "Settings"}</span>
+                  </button>
 
-                <button
-                  onClick={() => {
-                    handleMockLogout();
-                    setShowMobileMenu(false);
-                  }}
-                  className="flex-1 py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/50 rounded-xl transition-all cursor-pointer shadow-sm text-xs font-bold flex items-center justify-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>{language === "ka" ? "გამოსვლა" : "Log Out"}</span>
-                </button>
+                  <button
+                    onClick={() => {
+                      handleMockLogout();
+                      setShowMobileMenu(false);
+                    }}
+                    className="flex-1 py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/50 rounded-xl transition-all cursor-pointer shadow-sm text-xs font-bold flex items-center justify-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>{language === "ka" ? "გამოსვლა" : "Log Out"}</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -2106,7 +2194,32 @@ export default function App() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
-        {currentView === "settings" ? (
+        {inviteToken ? (
+          <AcceptInviteView
+            token={inviteToken}
+            language={language}
+            onAccepted={(resUser, sessionToken) => {
+              setInviteToken(null);
+              window.history.replaceState({}, "", "/");
+              refreshUser();
+              setCurrentView("dashboard");
+              showToast(language === "ka" ? "მოწვევა მიღებულია! კეთილი იყოს თქვენი მობრძანება" : "Invite accepted! Welcome", "success");
+            }}
+            onGoHome={() => {
+              setInviteToken(null);
+              window.history.replaceState({}, "", "/");
+              setCurrentView("landing");
+            }}
+          />
+        ) : currentView === "team" && activePlan === "multi" ? (
+          <TeamManagement
+            language={language}
+            currentUserEmail={currentUser?.email || ""}
+            userPermissions={userPermissions}
+            onGoBack={() => setCurrentView("dashboard")}
+            showToast={showToast}
+          />
+        ) : currentView === "settings" ? (
           <SettingsMockup
             language={language}
             userEmail={currentUser?.email || "slinchenko021@gmail.com"}
@@ -2137,15 +2250,6 @@ export default function App() {
 
         {/* Premium Tools Section */}
         <div className="grid grid-cols-1 gap-4">
-          {!isRoleLockedFromUrl && activePlan === "multi" && (
-            <RoleSimulator
-              language={language}
-              activeRole={activeRole}
-              onRoleChanged={(role) => setActiveRole(role)}
-              rolePermissions={rolePermissions}
-              onPermissionsChanged={(perms) => setRolePermissions(perms)}
-            />
-          )}
           <LiveExchangeRates
             language={language}
             onRatesChanged={(rates) => setExchangeRates(rates)}
@@ -2154,7 +2258,7 @@ export default function App() {
 
         {/* Upload Zone */}
         <div id="upload-zone-container" className="max-w-3xl mx-auto">
-          {rolePermissions[activeRole].canUpload ? (
+          {currentRolePermissions.canUpload ? (
             <InvoiceUploadZone 
               language={language}
               onUpload={handleUpload}
@@ -2196,7 +2300,7 @@ export default function App() {
         )}
 
         {/* Premium AI Financial Insights */}
-        {rolePermissions[activeRole].viewAnalytics && (
+        {currentRolePermissions.viewAnalytics && (
           <SmartInsights
             language={language}
             invoices={workspaceInvoices}
@@ -2206,22 +2310,22 @@ export default function App() {
         )}
 
         {/* Invoice Summary and Stats Cards */}
-        {rolePermissions[activeRole].viewAnalytics && (
+        {currentRolePermissions.viewAnalytics && (
           <InvoiceSummaryCards language={language} invoices={workspaceInvoices} />
         )}
 
         {/* Interactive Spend Analytics & Category Budgets */}
-        {rolePermissions[activeRole].viewAnalytics && (
+        {currentRolePermissions.viewAnalytics && (
           <InvoiceAnalytics 
             language={language} 
             invoices={workspaceInvoices} 
             onBudgetsChanged={(b) => setBudgets(b)} 
-            canManageBudgets={rolePermissions[activeRole].manageBudgets}
+            canManageBudgets={currentRolePermissions.manageBudgets}
           />
         )}
 
         {/* Vendor & Supplier Spend Analysis */}
-        {rolePermissions[activeRole].viewAnalytics && (
+        {currentRolePermissions.viewAnalytics && (
           <VendorAnalytics
             language={language}
             invoices={workspaceInvoices}
@@ -2290,19 +2394,19 @@ export default function App() {
               {/* Create Custom Invoice Button */}
               <button
                 type="button"
-                onClick={() => rolePermissions[activeRole].canUpload && handleAddManual()}
-                disabled={!rolePermissions[activeRole].canUpload}
+                onClick={() => currentRolePermissions.canUpload && handleAddManual()}
+                disabled={!currentRolePermissions.canUpload}
                 className={`inline-flex items-center gap-1.5 px-3 py-2 border rounded-xl text-sm font-bold shadow-sm transition-all duration-200 ${
-                  rolePermissions[activeRole].canUpload
+                  currentRolePermissions.canUpload
                     ? "border-indigo-200 bg-indigo-50 hover:bg-indigo-100/70 text-indigo-700 cursor-pointer hover:scale-[1.02] active:scale-[0.98] hover:shadow-md"
                     : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
                 }`}
-                title={rolePermissions[activeRole].canUpload 
+                title={currentRolePermissions.canUpload 
                   ? (language === "ka" ? "ინვოისის ხელით შექმნა" : "Create Manual Invoice")
                   : (language === "ka" ? "შექმნა შეზღუდულია მფლობელის მიერ" : "Creation locked by Owner")
                 }
               >
-                {rolePermissions[activeRole].canUpload ? (
+                {currentRolePermissions.canUpload ? (
                   <Plus className="w-4 h-4 text-indigo-600 animate-pulse" />
                 ) : (
                   <Lock className="w-4 h-4 text-slate-400" />
@@ -2362,7 +2466,7 @@ export default function App() {
               </div>
 
               {/* Clear all */}
-              {invoices.length > 0 && rolePermissions[activeRole].canDelete && (
+              {invoices.length > 0 && currentRolePermissions.canDelete && (
                 <button
                   onClick={handleClearAll}
                   className="p-2 text-red-500 hover:bg-red-50/80 rounded-xl transition-all border border-transparent hover:border-red-100 cursor-pointer"
@@ -2513,7 +2617,7 @@ export default function App() {
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                            {rolePermissions[activeRole].canDelete && (
+                            {currentRolePermissions.canDelete && (
                               <button
                                 onClick={() => handleDelete(inv.id)}
                                 className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-white rounded-lg border border-transparent hover:border-red-100 transition-all cursor-pointer"
@@ -2564,7 +2668,7 @@ export default function App() {
                             >
                               {language === "ka" ? "ატვირთე პირველი დოკუმენტი" : "Upload First Document"}
                             </button>
-                            {rolePermissions[activeRole].canUpload && (
+                            {currentRolePermissions.canUpload && (
                               <button
                                 onClick={handleAddManual}
                                 className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer"
@@ -2685,7 +2789,7 @@ export default function App() {
                         <Eye className="w-3.5 h-3.5" />
                         <span>{language === "ka" ? "დეტალები" : "Details"}</span>
                       </button>
-                      {rolePermissions[activeRole].canDelete && (
+                      {currentRolePermissions.canDelete && (
                         <button
                           type="button"
                           onClick={(e) => {
