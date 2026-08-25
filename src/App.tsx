@@ -31,7 +31,9 @@ import {
   Building2,
   Settings,
   HelpCircle,
-  Menu
+  Menu,
+  Sun,
+  Moon
 } from "lucide-react";
 import { 
   Language, 
@@ -160,6 +162,21 @@ export default function App() {
 
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [pricingPlanToggle, setPricingPlanToggle] = useState<"single" | "multi">("single");
+
+  // Dark / Light Mode (Night Mode) State
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem("theme_mode") === "dark";
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme_mode", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme_mode", "light");
+    }
+  }, [isDarkMode]);
 
   // Authentication Actions bound to useAuth
   const handleMockLogin = async (email: string, password?: string) => {
@@ -747,13 +764,17 @@ export default function App() {
   // 1. PUBLIC LANDING PAGE
   if (!currentUser && currentView === "landing") {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] text-slate-600 font-sans antialiased transition-all duration-300 relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+      <div className={`min-h-screen font-sans antialiased transition-all duration-300 relative overflow-x-hidden selection:bg-indigo-500 selection:text-white ${
+        isDarkMode ? "dark bg-[#0b0f19] text-slate-100" : "bg-[#F8FAFC] text-slate-600"
+      }`}>
         {/* Decorative background blobs */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-rose-200/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-indigo-100/40 shadow-sm">
+        <header className={`sticky top-0 z-50 backdrop-blur-md border-b transition-colors ${
+          isDarkMode ? "bg-[#111827]/90 border-slate-800 text-slate-100 shadow-md" : "bg-white/80 border-indigo-100/40 text-slate-900 shadow-sm"
+        }`}>
           <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
             <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setCurrentView("landing")}>
               <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-100 flex items-center justify-center">
@@ -765,10 +786,38 @@ export default function App() {
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-3">
+              {/* Theme Selector */}
+              <div className="flex bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700 shadow-xs">
+                <button
+                  onClick={() => setIsDarkMode(false)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
+                    !isDarkMode
+                      ? "bg-white shadow-xs text-indigo-600"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                  title={language === "ka" ? "დღის რეჟიმი" : "Light Mode"}
+                >
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="hidden lg:inline text-[11px]">{language === "ka" ? "დღის" : "Light"}</span>
+                </button>
+                <button
+                  onClick={() => setIsDarkMode(true)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
+                    isDarkMode
+                      ? "bg-slate-900 shadow-xs text-amber-400 border border-slate-700/80"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                  title={language === "ka" ? "ღამის რეჟიმი (მუქი ფონი)" : "Dark Mode"}
+                >
+                  <Moon className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden lg:inline text-[11px]">{language === "ka" ? "ღამის" : "Dark"}</span>
+                </button>
+              </div>
+
               <button
                 onClick={() => setLanguage(language === "ka" ? "en" : "ka")}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
               >
                 <Globe className="w-3.5 h-3.5 text-indigo-600" />
                 <span>{language === "ka" ? "EN" : "KA"}</span>
@@ -1144,7 +1193,10 @@ export default function App() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setCurrentView("signup")}
+                  onClick={() => {
+                    setPricingPlanToggle("single");
+                    setCurrentView("signup");
+                  }}
                   className="w-full mt-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all cursor-pointer border border-white/5"
                 >
                   {language === "ka" ? "გეგმის არჩევა" : "Select Single Plan"}
@@ -1193,10 +1245,13 @@ export default function App() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setCurrentView("signup")}
+                  onClick={() => {
+                    setPricingPlanToggle("multi");
+                    setCurrentView("signup");
+                  }}
                   className="w-full mt-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-600/20 cursor-pointer"
                 >
-                  {language === "ka" ? "დაიწყე ახლავე" : "Select Multi Plan"}
+                  {language === "ka" ? "გეგმის არჩევა" : "Select Multi Plan"}
                 </button>
               </div>
             </div>
@@ -1239,9 +1294,13 @@ export default function App() {
     const isLogin = currentView === "login";
 
     return (
-      <div className="min-h-screen bg-white flex flex-col md:flex-row font-sans relative selection:bg-indigo-500 selection:text-white">
+      <div className={`min-h-screen flex flex-col md:flex-row font-sans relative selection:bg-indigo-500 selection:text-white ${
+        isDarkMode ? "dark bg-[#0b0f19] text-slate-100" : "bg-white text-slate-800"
+      }`}>
         {/* Left Side: Dark Indigo Brand Presentation (Width: 50% on desktop, hidden on mobile) */}
-        <div className="hidden md:flex md:w-1/2 bg-[#1E1B4B] text-white p-12 lg:p-16 flex-col justify-between relative overflow-hidden">
+        <div className={`hidden md:flex md:w-1/2 text-white p-12 lg:p-16 flex-col justify-between relative overflow-hidden ${
+          isDarkMode ? "bg-[#0d1424] border-r border-slate-800" : "bg-[#1E1B4B]"
+        }`}>
           {/* Subtle decoration */}
           <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none" />
@@ -1567,8 +1626,16 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen bg-[#fdfdfd] text-slate-800 font-sans antialiased pb-12 transition-colors duration-300 relative overflow-x-hidden"
-      style={{ backgroundImage: 'radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.05) 0px, transparent 50%)' }}
+      className={`min-h-screen font-sans antialiased pb-12 transition-colors duration-300 relative overflow-x-hidden ${
+        isDarkMode 
+          ? "dark bg-slate-950 text-slate-100" 
+          : "bg-[#fdfdfd] text-slate-800"
+      }`}
+      style={
+        isDarkMode
+          ? { backgroundImage: 'radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.1) 0px, transparent 50%)' }
+          : { backgroundImage: 'radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.05) 0px, transparent 50%)' }
+      }
     >
       {isRoleLockedFromUrl && (
         <div className="bg-slate-950 text-slate-100 text-[11px] py-2 px-4 flex items-center justify-between gap-3 font-bold border-b border-slate-800">
@@ -1598,17 +1665,21 @@ export default function App() {
       )}
 
       {/* Top Banner / Header */}
-      <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-lg border-b border-slate-200/60 shadow-sm">
+      <header className={`sticky top-0 z-40 backdrop-blur-lg border-b shadow-sm transition-colors ${
+        isDarkMode 
+          ? "bg-slate-900/80 border-slate-800 text-slate-100" 
+          : "bg-white/60 border-slate-200/60 text-slate-900"
+      }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-100">
+            <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-100 dark:shadow-indigo-900/20">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h1 id="app-title" className="font-bold text-slate-900 text-base sm:text-xl leading-none">
+              <h1 id="app-title" className={`font-bold text-base sm:text-xl leading-none ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                 {t.title}
               </h1>
-              <p className="text-xs text-slate-400 mt-1 hidden sm:block">
+              <p className={`text-xs mt-1 hidden sm:block ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
                 {language === "ka" ? "ინვოისებისა და ხარჯების ჭკვიანი ანალიზი" : "Intelligent invoice & expense management"}
               </p>
             </div>
@@ -1832,18 +1903,46 @@ export default function App() {
               </div>
             )}
 
-            {/* Language Switcher */}
+            {/* Theme Toggle & Language Switcher */}
             <div className="flex items-center gap-2">
-              <div className="flex bg-slate-100 rounded-full p-1 border border-slate-200 shadow-sm">
+              {/* Dark / Light Mode Segment Pill */}
+              <div className="flex bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700 shadow-xs">
+                <button
+                  onClick={() => setIsDarkMode(false)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
+                    !isDarkMode
+                      ? "bg-white shadow-xs text-indigo-600"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                  title={language === "ka" ? "დღის რეჟიმი" : "Light Mode"}
+                >
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="hidden md:inline text-[11px]">{language === "ka" ? "დღის" : "Light"}</span>
+                </button>
+                <button
+                  onClick={() => setIsDarkMode(true)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
+                    isDarkMode
+                      ? "bg-slate-900 shadow-xs text-amber-400 border border-slate-700/80"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                  title={language === "ka" ? "ღამის რეჟიმი (მუქი ფონი)" : "Dark Mode"}
+                >
+                  <Moon className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden md:inline text-[11px]">{language === "ka" ? "ღამის" : "Dark"}</span>
+                </button>
+              </div>
+
+              <div className="flex bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700 shadow-xs">
                 <button
                   onClick={() => setLanguage("ka")}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer ${language === "ka" ? "bg-white shadow-sm text-indigo-600" : "text-slate-500 hover:text-slate-800"}`}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer ${language === "ka" ? "bg-white dark:bg-slate-700 shadow-xs text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"}`}
                 >
                   ქართული
                 </button>
                 <button
                   onClick={() => setLanguage("en")}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer ${language === "en" ? "bg-white shadow-sm text-indigo-600" : "text-slate-500 hover:text-slate-800"}`}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer ${language === "en" ? "bg-white dark:bg-slate-700 shadow-xs text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"}`}
                 >
                   English
                 </button>
@@ -2119,6 +2218,29 @@ export default function App() {
                 </div>
               </div>
             )}
+
+            {/* Theme Mode Switcher for Mobile */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                {language === "ka" ? "რეჟიმი / Theme" : "Theme Mode"}
+              </span>
+              <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 border border-slate-200 dark:border-slate-700 shadow-sm w-full">
+                <button
+                  onClick={() => setIsDarkMode(false)}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${!isDarkMode ? "bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-800"}`}
+                >
+                  <Sun className="w-3.5 h-3.5" />
+                  <span>{language === "ka" ? "დღის" : "Light"}</span>
+                </button>
+                <button
+                  onClick={() => setIsDarkMode(true)}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${isDarkMode ? "bg-slate-900 shadow-sm text-amber-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-800"}`}
+                >
+                  <Moon className="w-3.5 h-3.5" />
+                  <span>{language === "ka" ? "ღამის" : "Dark"}</span>
+                </button>
+              </div>
+            </div>
 
             {/* Language Switcher for Mobile */}
             <div className="space-y-1.5">
