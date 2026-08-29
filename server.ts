@@ -83,16 +83,11 @@ function formatUserResponse(user: DbUser, db: DbSchema) {
     deleteInvoices: isOwnerOrAdmin,
     editBudgets: isOwnerOrAdmin,
     viewAnalytics: true,
-    manageTeam: isOwner,
+    manageTeam: isOwnerOrAdmin,
     manageBilling: isOwnerOrAdmin,
   };
 
   const permissions = user.permissions ? { ...defaultPermissions, ...user.permissions } : defaultPermissions;
-  
-  // Non-owner / invited users NEVER get team management permissions
-  if (!isOwner) {
-    permissions.manageTeam = false;
-  }
 
   return {
     email: user.email,
@@ -276,11 +271,11 @@ app.post("/api/bootstrap-company", requireAuth, (req, res) => {
   const companyId = `company-${Math.random().toString(36).substring(2, 9)}`;
   db.companies[companyId] = { id: companyId, name };
   
-  // Link user to company as admin with full permissions & platform owner flag
+  // Link user to company as admin with full company permissions
   db.users[user.email].company_id = companyId;
   db.users[user.email].role = "admin";
   db.users[user.email].position = "ადმინისტრატორი";
-  db.users[user.email].is_platform_owner = true;
+  db.users[user.email].is_platform_owner = false;
   db.users[user.email].permissions = {
     uploadInvoices: true,
     deleteInvoices: true,

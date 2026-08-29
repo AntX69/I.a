@@ -10,6 +10,7 @@ import {
   Copy, 
   Trash2, 
   Shield, 
+  ShieldCheck,
   AlertTriangle, 
   CheckCircle2, 
   Clock, 
@@ -312,18 +313,17 @@ export default function TeamManagement({
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-slate-100">
+          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                  <th className="px-6 py-3.5">{language === "ka" ? "სახელი / ელფოსტა" : "Name / Email"}</th>
-                  <th className="px-6 py-3.5">{language === "ka" ? "პოზიცია" : "Position"}</th>
-                  <th className="px-6 py-3.5">{language === "ka" ? "სტატუსი" : "Status"}</th>
-                  <th className="px-6 py-3.5">{language === "ka" ? "აქტიური უფლებები" : "Active Permissions"}</th>
-                  <th className="px-6 py-3.5 text-right">{language === "ka" ? "მოქმედება" : "Action"}</th>
+                <tr className="bg-slate-50/80 dark:bg-slate-800/60 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+                  <th className="px-4 sm:px-5 py-3.5">{language === "ka" ? "თანამშრომელი / ელფოსტა" : "Employee / Email"}</th>
+                  <th className="px-4 sm:px-5 py-3.5">{language === "ka" ? "პოზიცია" : "Position"}</th>
+                  <th className="px-4 sm:px-5 py-3.5">{language === "ka" ? "სტატუსი" : "Status"}</th>
+                  <th className="px-4 sm:px-5 py-3.5 text-right">{language === "ka" ? "მოქმედება" : "Action"}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs font-medium">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
                 {/* Active Members */}
                 {members.map((member) => {
                   const isSelf = member.email === currentUserEmail;
@@ -337,68 +337,68 @@ export default function TeamManagement({
                       className={`transition-all duration-200 cursor-pointer ${
                         isRevoked
                           ? "bg-rose-50/20 opacity-60 hover:bg-rose-50/30"
-                          : "hover:bg-indigo-50/20 hover:border-l-2 hover:border-l-indigo-500"
+                          : "hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20"
                       }`}
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-2xl flex items-center justify-center font-extrabold text-xs shadow-xs ${
+                          <div className={`w-9 h-9 rounded-2xl flex items-center justify-center font-extrabold text-xs shadow-xs shrink-0 ${
                             isRevoked
                               ? "bg-rose-100 text-rose-700"
-                              : "bg-indigo-100 text-indigo-700"
+                              : "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300"
                           }`}>
                             {(member.email[0] || "U").toUpperCase()}
                           </div>
-                          <div>
-                            <div className="font-extrabold text-slate-900 flex items-center gap-2">
-                              <span>{member.email}</span>
+                          <div className="min-w-0">
+                            <div className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                              <span className="truncate">{member.email}</span>
                               {isSelf && (
-                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[10px] font-bold">
+                                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-md text-[10px] font-bold shrink-0">
                                   {language === "ka" ? "თქვენ" : "You"}
                                 </span>
                               )}
                               {member.is_platform_owner && (
-                                <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200/50 rounded-md text-[10px] font-bold">
+                                <span className="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/50 rounded-md text-[10px] font-bold shrink-0">
                                   {language === "ka" ? "მფლობელი" : "Owner"}
                                 </span>
                               )}
+                            </div>
+                            <div className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5 flex items-center gap-1.5">
+                              <ShieldCheck className="w-3 h-3 text-indigo-500 shrink-0" />
+                              <span>
+                                {activePermsCount} / 6 {language === "ka" ? "უფლება" : "permissions"}
+                              </span>
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl">
+                      <td className="px-4 sm:px-5 py-3.5">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl text-xs whitespace-nowrap">
                           {member.position || (language === "ka" ? "თანამშრომელი" : "Employee")}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-5 py-3.5">
                         {isRevoked ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 border border-rose-200/80 text-rose-700 rounded-full text-[11px] font-bold">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 text-rose-700 dark:text-rose-400 rounded-full text-[11px] font-bold whitespace-nowrap">
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                             {language === "ka" ? "გაუქმებული" : "Revoked"}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200/80 text-emerald-700 rounded-full text-[11px] font-bold">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-400 rounded-full text-[11px] font-bold whitespace-nowrap">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             {language === "ka" ? "აქტიური" : "Active"}
                           </span>
                         )}
                       </td>
 
-                      <td className="px-6 py-4">
-                        <span className="text-slate-600 font-bold">
-                          {activePermsCount} / 6 {language === "ka" ? "უფლება" : "permissions"}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-4 sm:px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           {!isRevoked && (
                             <button
                               onClick={() => handleSelectMember(member)}
-                              className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                              className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-xl font-bold text-xs transition-colors cursor-pointer"
                             >
                               {language === "ka" ? "მართვა" : "Manage"}
                             </button>
@@ -406,7 +406,7 @@ export default function TeamManagement({
                           {!isSelf && !isRevoked && userPermissions.manageTeam && (
                             <button
                               onClick={() => setRevokeTarget({ id: member.email, name: member.email })}
-                              className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-colors cursor-pointer"
+                              className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 rounded-xl transition-colors cursor-pointer"
                               title={language === "ka" ? "წვდომის გაუქმება" : "Revoke Access"}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -425,45 +425,45 @@ export default function TeamManagement({
                   return (
                     <tr
                       key={invite.token}
-                      className="bg-amber-50/10 hover:bg-amber-50/30 transition-all duration-200"
+                      className="bg-amber-50/10 dark:bg-amber-950/10 hover:bg-amber-50/30 dark:hover:bg-amber-950/20 transition-all duration-200"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-extrabold text-xs">
+                          <div className="w-9 h-9 rounded-2xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center font-extrabold text-xs shrink-0">
                             <Mail className="w-4 h-4" />
                           </div>
-                          <div>
-                            <div className="font-extrabold text-slate-900">{invite.name}</div>
-                            <div className="text-xs text-slate-400 font-medium">{invite.email}</div>
+                          <div className="min-w-0">
+                            <div className="font-extrabold text-slate-900 dark:text-white truncate">{invite.name}</div>
+                            <div className="text-[11px] text-slate-400 font-medium truncate">{invite.email}</div>
+                            <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5 flex items-center gap-1">
+                              <Clock className="w-3 h-3 shrink-0" />
+                              <span>
+                                {language === "ka" ? "ვადა: " : "Expires: "}
+                                {new Date(invite.expires_at).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </td>
 
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl">
+                      <td className="px-4 sm:px-5 py-3.5">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl text-xs whitespace-nowrap">
                           {invite.position || "თანამშრომელი"}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200/80 text-amber-700 rounded-full text-[11px] font-bold">
+                      <td className="px-4 sm:px-5 py-3.5">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 rounded-full text-[11px] font-bold whitespace-nowrap">
                           <Clock className="w-3 h-3 text-amber-500 animate-spin" style={{ animationDuration: "4s" }} />
-                          {language === "ka" ? "მოწვეულია (მოლოდინში)" : "Invited (Pending)"}
+                          {language === "ka" ? "მოლოდინში" : "Pending"}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
-                        <span className="text-xs text-slate-400 font-semibold">
-                          {language === "ka" ? "ვადა: " : "Expires: "}
-                          {new Date(invite.expires_at).toLocaleDateString()}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-4 sm:px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                           <button
                             onClick={() => handleCopyLink(fullLink)}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer"
                             title={language === "ka" ? "ლინკის კოპირება" : "Copy Link"}
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -473,7 +473,7 @@ export default function TeamManagement({
                           {userPermissions.manageTeam && (
                             <button
                               onClick={() => setRevokeTarget({ id: invite.token, name: invite.name, isInvite: true })}
-                              className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-colors cursor-pointer"
+                              className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 rounded-xl transition-colors cursor-pointer"
                               title={language === "ka" ? "მოწვევის გაუქმება" : "Cancel Invite"}
                             >
                               <X className="w-4 h-4" />
@@ -604,33 +604,28 @@ export default function TeamManagement({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {(Object.keys(PERMISSION_LABELS) as Array<keyof UserPermissions>).map((key) => {
-                      const isDisabled = key === "manageTeam";
-                      const isChecked = isDisabled ? false : invitePermissions[key];
+                      const isChecked = invitePermissions[key];
                       const info = PERMISSION_LABELS[key];
 
                       return (
                         <label
                           key={key}
-                          className={`flex items-start gap-3 p-3 rounded-2xl border transition-all select-none ${
-                            isDisabled
-                              ? "bg-slate-100/70 border-slate-200 text-slate-400 cursor-not-allowed opacity-75"
-                              : isChecked
-                              ? "bg-indigo-50/50 border-indigo-200 text-indigo-900 shadow-xs cursor-pointer"
-                              : "bg-slate-50/50 border-slate-200 text-slate-600 hover:border-slate-300 cursor-pointer"
+                          className={`flex items-start gap-3 p-3 rounded-2xl border transition-all select-none cursor-pointer ${
+                            isChecked
+                              ? "bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 shadow-xs"
+                              : "bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300"
                           }`}
                         >
                           <input
                             type="checkbox"
-                            disabled={isDisabled}
                             checked={isChecked}
                             onChange={(e) =>
-                              !isDisabled &&
                               setInvitePermissions((prev) => ({
                                 ...prev,
                                 [key]: e.target.checked,
                               }))
                             }
-                            className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 disabled:opacity-50"
+                            className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer"
                           />
                           <div className="space-y-0.5">
                             <span className="text-xs font-extrabold block">
@@ -714,33 +709,28 @@ export default function TeamManagement({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(Object.keys(PERMISSION_LABELS) as Array<keyof UserPermissions>).map((key) => {
-                    const isDisabled = key === "manageTeam" && !selectedMember?.is_platform_owner;
-                    const isChecked = isDisabled ? false : editPermissions[key];
+                    const isChecked = editPermissions[key];
                     const info = PERMISSION_LABELS[key];
 
                     return (
                       <label
                         key={key}
-                        className={`flex items-start gap-3 p-3 rounded-2xl border transition-all select-none ${
-                          isDisabled
-                            ? "bg-slate-100/70 border-slate-200 text-slate-400 cursor-not-allowed opacity-75"
-                            : isChecked
-                            ? "bg-indigo-50/50 border-indigo-200 text-indigo-900 shadow-xs cursor-pointer"
-                            : "bg-slate-50/50 border-slate-200 text-slate-600 hover:border-slate-300 cursor-pointer"
+                        className={`flex items-start gap-3 p-3 rounded-2xl border transition-all select-none cursor-pointer ${
+                          isChecked
+                            ? "bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 shadow-xs"
+                            : "bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300"
                         }`}
                       >
                         <input
                           type="checkbox"
-                          disabled={isDisabled}
                           checked={isChecked}
                           onChange={(e) =>
-                            !isDisabled &&
                             setEditPermissions((prev) => ({
                               ...prev,
                               [key]: e.target.checked,
                             }))
                           }
-                          className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 disabled:opacity-50"
+                          className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer"
                         />
                         <div className="space-y-0.5">
                           <span className="text-xs font-extrabold block">
