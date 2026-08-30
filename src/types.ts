@@ -54,6 +54,17 @@ export interface PendingInvite {
   status: "pending" | "accepted" | "revoked";
 }
 
+export interface AuditLogEntry {
+  id: string;
+  company_id: string;
+  user_email: string;
+  user_name?: string;
+  action: string;
+  target_description: string;
+  timestamp: string;
+  type?: "invoice" | "team" | "budget" | "system";
+}
+
 export interface RolePermissions {
   canUpload: boolean;
   viewAnalytics: boolean;
@@ -99,7 +110,7 @@ export const TRANSLATIONS = {
     exportCsv: "CSV File",
     exportExcel: "Excel File (.xls)",
     exportMenu: "Export Data",
-    searchPlaceholder: "Filter by vendor or item...",
+    searchPlaceholder: "Search by vendor or amount...",
     allCategories: "All Categories",
     fileName: "File Name",
     uploadedTime: "Uploaded",
@@ -151,7 +162,7 @@ export const TRANSLATIONS = {
     exportCsv: "CSV ფაილი",
     exportExcel: "Excel ფაილი (.xls)",
     exportMenu: "მონაცემების ექსპორტი",
-    searchPlaceholder: "ფილტრაცია გამყიდველით ან პროდუქტით...",
+    searchPlaceholder: "ძებნა ვენდორის სახელით ან თანხით...",
     allCategories: "ყველა კატეგორია",
     fileName: "ფაილის სახელი",
     uploadedTime: "ატვირთულია",

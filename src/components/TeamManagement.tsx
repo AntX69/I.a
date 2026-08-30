@@ -16,9 +16,15 @@ import {
   Clock, 
   Lock, 
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  History,
+  FileText,
+  Search,
+  Filter,
+  RefreshCw,
+  Activity
 } from "lucide-react";
-import { Language, UserPermissions, TeamMember, PendingInvite } from "../types";
+import { Language, UserPermissions, TeamMember, PendingInvite, AuditLogEntry } from "../types";
 import { apiFetch } from "../lib/api";
 
 interface TeamManagementProps {
@@ -112,6 +118,27 @@ export default function TeamManagement({
   const [revokeTarget, setRevokeTarget] = useState<{ id: string; name: string; isInvite?: boolean } | null>(null);
   const [isRevoking, setIsRevoking] = useState(false);
 
+  // Tabs: Members vs Audit Log
+  const [activeTab, setActiveTab] = useState<"members" | "audit">("members");
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [auditSearch, setAuditSearch] = useState("");
+  const [auditFilter, setAuditFilter] = useState<string>("all");
+
+  const fetchAuditLogs = async () => {
+    setIsLoadingLogs(true);
+    try {
+      const data = await apiFetch<{ success: boolean; logs: AuditLogEntry[] }>("/api/audit-log");
+      if (data.success) {
+        setAuditLogs(data.logs || []);
+      }
+    } catch (err: any) {
+      showToast(err.message || (language === "ka" ? "ჟურნალის ჩატვირთვა ვერ მოხერხდა" : "Failed to load audit logs"), "error");
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  };
+
   const fetchTeam = async () => {
     setIsLoading(true);
     try {
@@ -129,6 +156,7 @@ export default function TeamManagement({
 
   useEffect(() => {
     fetchTeam();
+    fetchAuditLogs();
   }, []);
 
   const handleOpenInviteModal = () => {
@@ -268,30 +296,69 @@ export default function TeamManagement({
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-extrabold text-slate-900">
-                {language === "ka" ? "გუნდის წევრები" : "Team Members"}
-              </h2>
-              <p className="text-xs text-slate-400 font-semibold">
-                {language === "ka" ? `სულ: ${members.length} აქტიური | ${pendingInvites.length} მოწვეული` : `Total: ${members.length} active | ${pendingInvites.length} pending`}
-              </p>
-            </div>
-          </div>
+      <div className="space-y-4">
+        {/* Tab Switcher */}
+        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl w-full sm:w-fit gap-1 border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("members")}
+            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              activeTab === "members"
+                ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>{language === "ka" ? `გუნდის წევრები (${members.length})` : `Team Members (${members.length})`}</span>
+          </button>
 
           <button
-            onClick={fetchTeam}
-            className="p-2 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer rounded-xl hover:bg-slate-50"
-            title={language === "ka" ? "განახლება" : "Refresh"}
+            type="button"
+            onClick={() => {
+              setActiveTab("audit");
+              fetchAuditLogs();
+            }}
+            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              activeTab === "audit"
+                ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+            }`}
           >
-            <Clock className="w-4 h-4" />
+            <Activity className="w-4 h-4" />
+            <span>{language === "ka" ? "აქტივობის ჟურნალი" : "Activity & Audit Log"}</span>
+            {auditLogs.length > 0 && (
+              <span className="px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px]">
+                {auditLogs.length}
+              </span>
+            )}
           </button>
         </div>
+
+        {activeTab === "members" ? (
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900">
+                    {language === "ka" ? "გუნდის წევრები" : "Team Members"}
+                  </h2>
+                  <p className="text-xs text-slate-400 font-semibold">
+                    {language === "ka" ? `სულ: ${members.length} აქტიური | ${pendingInvites.length} მოწვეული` : `Total: ${members.length} active | ${pendingInvites.length} pending`}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={fetchTeam}
+                className="p-2 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer rounded-xl hover:bg-slate-50"
+                title={language === "ka" ? "განახლება" : "Refresh"}
+              >
+                <Clock className="w-4 h-4" />
+              </button>
+            </div>
 
         {isLoading ? (
           <div className="py-12 text-center text-slate-400 animate-pulse space-y-3">
@@ -486,6 +553,156 @@ export default function TeamManagement({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+          </div>
+        ) : (
+          /* AUDIT LOG TAB VIEW */
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900">
+                    {language === "ka" ? "უსაფრთხოებისა და აქტივობის ჟურნალი" : "Security & Activity Audit Log"}
+                  </h2>
+                  <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                    {language === "ka"
+                      ? "ორგანიზაციაში განხორციელებული ყველა ქმედების უცვლელი ისტორია"
+                      : "Chronological log of user actions, team alterations, and modifications"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={fetchAuditLogs}
+                disabled={isLoadingLogs}
+                className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isLoadingLogs ? "animate-spin" : ""}`} />
+                <span>{language === "ka" ? "განახლება" : "Refresh"}</span>
+              </button>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder={language === "ka" ? "ძებნა მოქმედებით, მომხმარებლით ან დეტალებით..." : "Search action, user, description..."}
+                  value={auditSearch}
+                  onChange={(e) => setAuditSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                {[
+                  { id: "all", ka: "ყველა", en: "All" },
+                  { id: "team", ka: "გუნდი", en: "Team" },
+                  { id: "invoice", ka: "ინვოისები", en: "Invoices" },
+                  { id: "budget", ka: "ბიუჯეტი", en: "Budget" },
+                  { id: "system", ka: "სისტემა", en: "System" },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setAuditFilter(f.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      auditFilter === f.id
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {language === "ka" ? f.ka : f.en}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Audit Logs List */}
+            {isLoadingLogs ? (
+              <div className="py-12 text-center text-slate-400 animate-pulse space-y-3">
+                <RefreshCw className="w-8 h-8 mx-auto text-indigo-400 animate-spin" />
+                <p className="text-xs font-bold">{language === "ka" ? "ჟურნალი იტვირთება..." : "Loading activity log..."}</p>
+              </div>
+            ) : (() => {
+              const filteredLogs = auditLogs.filter((log) => {
+                const matchesType = auditFilter === "all" || log.type === auditFilter;
+                const query = auditSearch.toLowerCase().trim();
+                const matchesQuery = !query ||
+                  log.action.toLowerCase().includes(query) ||
+                  log.user_email.toLowerCase().includes(query) ||
+                  (log.target_description && log.target_description.toLowerCase().includes(query));
+                return matchesType && matchesQuery;
+              });
+
+              if (filteredLogs.length === 0) {
+                return (
+                  <div className="py-12 text-center text-slate-400 space-y-3">
+                    <History className="w-10 h-10 mx-auto text-slate-300" />
+                    <p className="text-xs font-bold text-slate-600">
+                      {language === "ka" ? "ჩანაწერები ვერ მოიძებნა" : "No audit entries recorded yet"}
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50/80 dark:bg-slate-800/60 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+                        <th className="px-4 sm:px-5 py-3.5">{language === "ka" ? "მოქმედება" : "Action"}</th>
+                        <th className="px-4 sm:px-5 py-3.5">{language === "ka" ? "დეტალები" : "Description"}</th>
+                        <th className="px-4 sm:px-5 py-3.5">{language === "ka" ? "მომხმარებელი" : "User"}</th>
+                        <th className="px-4 sm:px-5 py-3.5 text-right">{language === "ka" ? "დრო" : "Timestamp"}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
+                      {filteredLogs.map((log) => {
+                        const dateObj = new Date(log.timestamp);
+                        const formattedTime = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                        let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
+                        if (log.type === "team") badgeColor = "bg-indigo-50 text-indigo-700 border-indigo-200";
+                        if (log.type === "invoice") badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
+                        if (log.type === "budget") badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+                        if (log.type === "system") badgeColor = "bg-purple-50 text-purple-700 border-purple-200";
+
+                        return (
+                          <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="px-4 sm:px-5 py-3.5">
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-0.5 rounded-lg font-extrabold text-[10px] uppercase border ${badgeColor}`}>
+                                  {log.action}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 sm:px-5 py-3.5">
+                              <span className="text-slate-800 font-semibold">
+                                {log.target_description || "-"}
+                              </span>
+                            </td>
+                            <td className="px-4 sm:px-5 py-3.5">
+                              <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+                                <User className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="truncate max-w-[160px]">{log.user_email}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 sm:px-5 py-3.5 text-right whitespace-nowrap text-slate-400 font-semibold text-[11px]">
+                              {formattedTime}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>

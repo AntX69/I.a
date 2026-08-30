@@ -40,6 +40,25 @@ interface DbInvite {
   status: "pending" | "accepted" | "revoked";
 }
 
+interface DbPasswordReset {
+  token: string;
+  email: string;
+  expires_at: string;
+  status: "pending" | "used";
+  created_at: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  company_id: string;
+  user_email: string;
+  user_name?: string;
+  action: string;
+  target_description: string;
+  timestamp: string;
+  type?: "invoice" | "team" | "budget" | "system";
+}
+
 interface DbSchema {
   users: Record<string, DbUser>;
   companies: Record<string, {
@@ -52,6 +71,8 @@ interface DbSchema {
     status: string;
   }>;
   invites?: Record<string, DbInvite>;
+  passwordResets?: Record<string, DbPasswordReset>;
+  auditLog?: AuditLogEntry[];
 }
 
 function loadDb(): DbSchema {
@@ -59,10 +80,12 @@ function loadDb(): DbSchema {
     try {
       const data = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
       if (!data.invites) data.invites = {};
+      if (!data.passwordResets) data.passwordResets = {};
+      if (!data.auditLog) data.auditLog = [];
       return data;
     } catch (_) {}
   }
-  return { users: {}, companies: {}, subscriptions: {}, invites: {} };
+  return { users: {}, companies: {}, subscriptions: {}, invites: {}, passwordResets: {}, auditLog: [] };
 }
 
 function saveDb(db: DbSchema) {
@@ -71,6 +94,52 @@ function saveDb(db: DbSchema) {
   } catch (err) {
     console.error("Failed to write database file:", err);
   }
+}
+
+function addAuditLog(
+  db: DbSchema,
+  companyId: string,
+  userEmail: string,
+  action: string,
+  targetDescription: string,
+  type: "invoice" | "team" | "budget" | "system" = "system",
+  userName?: string
+) {
+  if (!db.auditLog) db.auditLog = [];
+  const entry: AuditLogEntry = {
+    id: `log-${Math.random().toString(36).substring(2, 9)}-${Date.now()}`,
+    company_id: companyId,
+    user_email: userEmail,
+    user_name: userName || (db.users[userEmail]?.position || userEmail.split("@")[0]),
+    action,
+    target_description: targetDescription,
+    timestamp: new Date().toISOString(),
+    type
+  };
+  db.auditLog.unshift(entry);
+  if (db.auditLog.length > 500) {
+    db.auditLog = db.auditLog.slice(0, 500);
+  }
+  return entry;
+}
+
+// In-memory Rate Limiter for /api/analyze: Max 20 requests per minute per IP / token
+const analyzeRateLimits = new Map<string, number[]>();
+
+function checkAnalyzeRateLimit(identifier: string, maxRequests = 20, windowMs = 60000): { allowed: boolean; retryAfterSec?: number } {
+  const now = Date.now();
+  const timestamps = (analyzeRateLimits.get(identifier) || []).filter((t) => now - t < windowMs);
+  
+  if (timestamps.length >= maxRequests) {
+    const oldest = timestamps[0];
+    const retryAfterSec = Math.ceil((oldest + windowMs - now) / 1000);
+    analyzeRateLimits.set(identifier, timestamps);
+    return { allowed: false, retryAfterSec: Math.max(1, retryAfterSec) };
+  }
+
+  timestamps.push(now);
+  analyzeRateLimits.set(identifier, timestamps);
+  return { allowed: true };
 }
 
 function formatUserResponse(user: DbUser, db: DbSchema) {
@@ -344,6 +413,14 @@ app.post("/api/invites", requireAuth, (req, res) => {
 
   if (!db.invites) db.invites = {};
   db.invites[token] = invite;
+  addAuditLog(
+    db,
+    authUser.company_id,
+    authUser.email,
+    "თანამშრომლის მოწვევა",
+    `მოწვეულია ${name} (${email}) პოზიციაზე "${position || "თანამშრომელი"}"`,
+    "team"
+  );
   saveDb(db);
 
   res.json({
@@ -490,6 +567,15 @@ app.patch("/api/team/:userId/permissions", requireAuth, (req, res) => {
     };
   }
 
+  addAuditLog(
+    db,
+    authUser.company_id,
+    authUser.email,
+    "უფლებების ცვლილება",
+    `განახლდა ${userId}-ის პოზიცია (${targetUser.position}) და უფლებები`,
+    "team"
+  );
+
   saveDb(db);
   res.json({ success: true, user: formatUserResponse(targetUser, db) });
 });
@@ -511,6 +597,14 @@ app.post("/api/team/:userId/revoke", requireAuth, (req, res) => {
   if (db.users[userId]) {
     if (db.users[userId].company_id === authUser.company_id) {
       db.users[userId].status = "revoked";
+      addAuditLog(
+        db,
+        authUser.company_id,
+        authUser.email,
+        "წვდომის გაუქმება",
+        `გაუქმდა თანამშრომლის წვდომა: ${userId}`,
+        "team"
+      );
       saveDb(db);
       res.json({ success: true, message: "წვდომა გაუქმებულია" });
       return;
@@ -529,12 +623,203 @@ app.post("/api/team/:userId/revoke", requireAuth, (req, res) => {
   }
 
   if (foundInvite) {
+    addAuditLog(
+      db,
+      authUser.company_id,
+      authUser.email,
+      "მოწვევის გაუქმება",
+      `გაუქმდა მოწვევა: ${userId}`,
+      "team"
+    );
     saveDb(db);
     res.json({ success: true, message: "მოწვევა გაუქმებულია" });
     return;
   }
 
   res.status(404).json({ error: "ჩანაწერი ვერ მოიძებნა" });
+});
+
+// --- AUDIT LOG ENDPOINTS ---
+
+// Get Audit Logs (restricted to admin or manageTeam)
+app.get("/api/audit-log", requireAuth, (req, res) => {
+  const authUser = (req as any).user as DbUser;
+  const db = loadDb();
+  const formattedAuthUser = formatUserResponse(authUser, db);
+
+  if (!formattedAuthUser.permissions.manageTeam && formattedAuthUser.role !== "admin") {
+    res.status(403).json({ error: "არ გაქვთ ჟურნალის ნახვის უფლება" });
+    return;
+  }
+
+  if (!authUser.company_id) {
+    res.json({ success: true, logs: [] });
+    return;
+  }
+
+  const companyLogs = (db.auditLog || [])
+    .filter((log) => log.company_id === authUser.company_id)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 100);
+
+  res.json({ success: true, logs: companyLogs });
+});
+
+// Post Audit Log from client-side actions
+app.post("/api/audit-log", requireAuth, (req, res) => {
+  const authUser = (req as any).user as DbUser;
+  const { action, targetDescription, type } = req.body;
+  if (!authUser.company_id || !action) {
+    res.status(400).json({ error: "Invalid log payload" });
+    return;
+  }
+
+  const db = loadDb();
+  const entry = addAuditLog(
+    db,
+    authUser.company_id,
+    authUser.email,
+    action,
+    targetDescription || "",
+    type || "system",
+    authUser.position
+  );
+  saveDb(db);
+  res.json({ success: true, entry });
+});
+
+// --- PASSWORD RESET ENDPOINTS ---
+
+// Request Password Reset
+app.post("/api/password-reset/request", (req, res) => {
+  const { email } = req.body;
+  if (!email || typeof email !== "string") {
+    res.status(400).json({ error: "ელფოსტა სავალდებულოა" });
+    return;
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const db = loadDb();
+  const user = db.users[normalizedEmail];
+
+  if (!user) {
+    res.status(404).json({ error: "მომხმარებელი ამ ელფოსტით ვერ მოიძებნა" });
+    return;
+  }
+
+  const token = `rst-${Math.random().toString(36).substring(2, 10)}${Date.now().toString(36)}`;
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour expiry
+
+  if (!db.passwordResets) db.passwordResets = {};
+  db.passwordResets[token] = {
+    token,
+    email: normalizedEmail,
+    expires_at: expiresAt,
+    status: "pending",
+    created_at: new Date().toISOString()
+  };
+
+  if (user.company_id) {
+    addAuditLog(
+      db,
+      user.company_id,
+      normalizedEmail,
+      "პაროლის აღდგენის მოთხოვნა",
+      `გენერირებულია პაროლის აღდგენის ბმული`,
+      "system"
+    );
+  }
+
+  saveDb(db);
+
+  console.log(`[PASSWORD RESET]: Generated token for ${normalizedEmail}: /reset-password/${token}`);
+
+  res.json({
+    success: true,
+    message: "პაროლის აღდგენის ბმული მომზადებულია",
+    token,
+    resetLink: `/reset-password/${token}`,
+    expiresAt
+  });
+});
+
+// Verify Password Reset Token
+app.get("/api/password-reset/:token", (req, res) => {
+  const { token } = req.params;
+  const db = loadDb();
+  const reset = db.passwordResets ? db.passwordResets[token] : null;
+
+  if (!reset) {
+    res.status(404).json({ error: "აღდგენის ბმული არასწორია ან ვერ მოიძებნა" });
+    return;
+  }
+
+  if (reset.status !== "pending") {
+    res.status(400).json({ error: "ეს აღდგენის ბმული უკვე გამოყენებულია" });
+    return;
+  }
+
+  if (new Date(reset.expires_at) < new Date()) {
+    res.status(400).json({ error: "აღდგენის ბმულის ვადა (1 საათი) ამოიწურა. გთხოვთ მოითხოვოთ ახალი." });
+    return;
+  }
+
+  res.json({
+    valid: true,
+    email: reset.email
+  });
+});
+
+// Execute Password Reset
+app.post("/api/password-reset/:token", (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+    res.status(400).json({ error: "ახალი პაროლი უნდა შედგებოდეს მინიმუმ 6 სიმბოლოსგან" });
+    return;
+  }
+
+  const db = loadDb();
+  const reset = db.passwordResets ? db.passwordResets[token] : null;
+
+  if (!reset || reset.status !== "pending") {
+    res.status(400).json({ error: "აღდგენის ბმული არასწორია ან უკვე გამოყენებულია" });
+    return;
+  }
+
+  if (new Date(reset.expires_at) < new Date()) {
+    res.status(400).json({ error: "აღდგენის ბმულის ვადა ამოიწურა" });
+    return;
+  }
+
+  const user = db.users[reset.email];
+  if (!user) {
+    res.status(404).json({ error: "მომხმარებელი ვერ მოიძებნა" });
+    return;
+  }
+
+  // Update password
+  user.password = newPassword;
+  reset.status = "used";
+
+  if (user.company_id) {
+    addAuditLog(
+      db,
+      user.company_id,
+      reset.email,
+      "პაროლის შეცვლა",
+      `მომხმარებელმა წარმატებით შეცვალა ანგარიშის პაროლი`,
+      "system"
+    );
+  }
+
+  saveDb(db);
+
+  res.json({
+    success: true,
+    message: "პაროლი წარმატებით განახლდა"
+  });
 });
 
 // Update Company Name and Subscription Tier
@@ -565,6 +850,15 @@ app.post("/api/update-company", requireAuth, (req, res) => {
       db.subscriptions[user.company_id].tier = plan;
     }
   }
+
+  addAuditLog(
+    db,
+    user.company_id,
+    user.email,
+    "პარამეტრების ცვლილება",
+    `განახლდა კომპანიის პარამეტრები: სახელი "${name || ""}", გეგმა "${plan || ""}"`,
+    "system"
+  );
 
   saveDb(db);
   res.json({ success: true });
@@ -602,6 +896,22 @@ app.get("/api/subscription", (req, res) => {
 // Analyze Invoice / Receipt Endpoint
 app.post("/api/analyze", async (req, res) => {
   try {
+    // 1. Rate Limiting Check (Max 20 requests per minute)
+    const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "global";
+    const authHeader = req.headers.authorization;
+    const rateLimitKey = authHeader && authHeader.startsWith("Bearer session-token-")
+      ? authHeader.substring("Bearer session-token-".length)
+      : String(clientIp);
+
+    const rateLimitResult = checkAnalyzeRateLimit(rateLimitKey, 20, 60000);
+    if (!rateLimitResult.allowed) {
+      res.status(429).json({
+        success: false,
+        error: `ძალიან ბევრი მოთხოვნა, გთხოვთ სცადოთ ცოტა ხანში (მაქსიმუმ 20 მოთხოვნა წუთში. სცადეთ ${rateLimitResult.retryAfterSec || 30} წამში).`
+      });
+      return;
+    }
+
     const { fileBase64, mimeType, fileName } = req.body;
 
     if (!fileBase64 || !mimeType) {

@@ -61,6 +61,7 @@ import NotFoundView from "./components/NotFoundView";
 import SettingsMockup from "./components/SettingsMockup";
 import TeamManagement from "./components/TeamManagement";
 import AcceptInviteView from "./components/AcceptInviteView";
+import { PasswordResetView } from "./components/PasswordResetView";
 
 export default function App() {
   // Invite token detection from URL
@@ -71,6 +72,16 @@ export default function App() {
     }
     const params = new URLSearchParams(window.location.search);
     return params.get("invite");
+  });
+
+  // Password reset token detection from URL
+  const [resetToken, setResetToken] = useState<string | null>(() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/reset-password/")) {
+      return path.substring("/reset-password/".length);
+    }
+    const params = new URLSearchParams(window.location.search);
+    return params.get("token") || params.get("reset_token");
   });
 
   // States
@@ -112,7 +123,14 @@ export default function App() {
     }
   }, [isAuthenticated, user?.company_id]);
 
-  const [currentView, setCurrentView] = useState<"landing" | "login" | "signup" | "create-company" | "settings" | "team" | "not-found" | "dashboard">("landing");
+  const [currentView, setCurrentView] = useState<"landing" | "login" | "signup" | "create-company" | "settings" | "team" | "not-found" | "dashboard" | "forgot_password" | "reset_password">(() => {
+    const path = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    if (path.startsWith("/reset-password/") || params.get("token") || params.get("reset_token")) {
+      return "reset_password";
+    }
+    return "landing";
+  });
   const [placeholderModal, setPlaceholderModal] = useState<"terms" | "privacy" | null>(null);
 
   const rawPermissions: UserPermissions = user?.permissions || {
@@ -133,7 +151,13 @@ export default function App() {
     if (isAuthLoading) return;
     
     if (!isAuthenticated) {
-      if (currentView !== "login" && currentView !== "signup" && currentView !== "landing") {
+      if (
+        currentView !== "login" &&
+        currentView !== "signup" &&
+        currentView !== "landing" &&
+        currentView !== "forgot_password" &&
+        currentView !== "reset_password"
+      ) {
         setCurrentView("landing");
       }
     } else {
@@ -142,12 +166,19 @@ export default function App() {
         setCurrentView("create-company");
       } else {
         // Logged in with company
-        if (currentView === "landing" || currentView === "login" || currentView === "signup" || currentView === "create-company") {
+        if (
+          currentView === "landing" ||
+          currentView === "login" ||
+          currentView === "signup" ||
+          currentView === "create-company" ||
+          currentView === "forgot_password" ||
+          currentView === "reset_password"
+        ) {
           setCurrentView("dashboard");
         }
       }
     }
-  }, [isAuthenticated, user?.company_id, isAuthLoading]);
+  }, [isAuthenticated, user?.company_id, isAuthLoading, currentView]);
 
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -714,9 +745,13 @@ export default function App() {
 
   // Filtering
   const filteredInvoices = workspaceInvoices.filter((inv) => {
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      inv.vendor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      !q ||
+      inv.vendor.toLowerCase().includes(q) ||
+      inv.amount.toString().includes(q) ||
+      `${inv.amount} ${inv.currency}`.toLowerCase().includes(q) ||
+      (inv.items && inv.items.some((item) => item.name.toLowerCase().includes(q)));
     
     const matchesCategory =
       selectedCategory === "all" || inv.category === selectedCategory;
@@ -1288,6 +1323,27 @@ export default function App() {
     );
   }
 
+  // 1.5 PASSWORD RESET VIEW
+  if (!currentUser && (currentView === "forgot_password" || currentView === "reset_password")) {
+    return (
+      <PasswordResetView
+        language={language}
+        initialToken={resetToken}
+        onSuccess={() => {
+          setResetToken(null);
+          window.history.replaceState({}, "", "/");
+          setCurrentView("login");
+        }}
+        onCancel={() => {
+          setResetToken(null);
+          window.history.replaceState({}, "", "/");
+          setCurrentView("login");
+        }}
+        showToast={showToast}
+      />
+    );
+  }
+
   // 2. AUTHENTICATION GATEWAY (Login / Signup Split Screen - Mandate 2)
   if (!currentUser && (currentView === "login" || currentView === "signup")) {
     const isLogin = currentView === "login";
@@ -1413,9 +1469,20 @@ export default function App() {
               </div>
 
               <div>
-                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
-                  {language === "ka" ? "პაროლი" : "Password"}
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+                    {language === "ka" ? "პაროლი" : "Password"}
+                  </label>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView("forgot_password")}
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
+                    >
+                      {language === "ka" ? "დაგავიწყდა პაროლი?" : "Forgot password?"}
+                    </button>
+                  )}
+                </div>
                 <input
                   name="password"
                   type="password"
@@ -2443,6 +2510,9 @@ export default function App() {
             activePlan={activePlan}
             onGoBack={() => setCurrentView("dashboard")}
             onUpdateSettings={handleUpdateSettings}
+            invoices={invoices}
+            workspaces={workspaces}
+            budgets={budgets}
           />
         ) : currentView === "not-found" ? (
           <NotFoundView

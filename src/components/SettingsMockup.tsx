@@ -16,26 +16,36 @@ import {
   Eye, 
   EyeOff, 
   Copy, 
-  FileText 
+  FileText,
+  Download,
+  Database,
+  FileSpreadsheet,
+  Archive
 } from "lucide-react";
-import { Language } from "../types";
+import { Language, ExtractedInvoice } from "../types";
 
 interface SettingsMockupProps {
   language: Language;
   userEmail: string;
   companyName: string;
   activePlan: "single" | "multi" | null;
+  invoices?: ExtractedInvoice[];
+  workspaces?: string[];
+  budgets?: Record<string, number>;
   onGoBack: () => void;
   onUpdateSettings: (name: string, plan: "single" | "multi") => Promise<void>;
 }
 
-type TabType = "profile" | "billing" | "security";
+type TabType = "profile" | "billing" | "security" | "export";
 
 export default function SettingsMockup({
   language,
   userEmail,
   companyName,
   activePlan,
+  invoices = [],
+  workspaces = [],
+  budgets = {},
   onGoBack,
   onUpdateSettings,
 }: SettingsMockupProps) {
@@ -215,6 +225,21 @@ export default function SettingsMockup({
           >
             <Shield className="w-4 h-4" />
             <span>{language === "ka" ? "უსაფრთხოება და გასაღებები" : "Security & Keys"}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab("export");
+              setError(null);
+            }}
+            className={`w-full text-left p-3 rounded-xl font-bold text-xs flex items-center gap-2 border transition-all cursor-pointer ${
+              activeTab === "export"
+                ? "bg-indigo-50 border-indigo-100 text-indigo-700"
+                : "border-transparent text-slate-500 hover:bg-slate-50"
+            }`}
+          >
+            <Download className="w-4 h-4" />
+            <span>{language === "ka" ? "მონაცემთა ექსპორტი" : "Data Export"}</span>
           </button>
         </div>
 
@@ -545,6 +570,144 @@ export default function SettingsMockup({
                 </button>
               </div>
 
+            </div>
+          )}
+
+          {/* TAB 4: DATA EXPORT */}
+          {activeTab === "export" && (
+            <div className="space-y-6 animate-fadeIn">
+              <div>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                  {language === "ka" ? "მონაცემთა სრული ექსპორტი და არქივი" : "Data Archive & Full Export"}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-1">
+                  {language === "ka"
+                    ? "ჩამოტვირთეთ თქვენი კომპანიის ყველა ინვოისი, ბიუჯეტის მონაცემები და სამუშაო სივრცეები JSON ან CSV ფორმატში."
+                    : "Export all corporate invoices, workspaces, and budget thresholds in JSON archive or CSV spreadsheet format."}
+                </p>
+              </div>
+
+              {/* Stats overview */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">
+                    {language === "ka" ? "სულ ინვოისი" : "Total Invoices"}
+                  </div>
+                  <div className="text-xl font-extrabold text-slate-900 mt-1">
+                    {invoices.length}
+                  </div>
+                </div>
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">
+                    {language === "ka" ? "ჯამური ხარჯი" : "Total Spend"}
+                  </div>
+                  <div className="text-xl font-extrabold text-indigo-600 mt-1">
+                    {invoices.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0).toFixed(2)}
+                  </div>
+                </div>
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl col-span-2 sm:col-span-1">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">
+                    {language === "ka" ? "სივრცეები" : "Workspaces"}
+                  </div>
+                  <div className="text-xl font-extrabold text-slate-900 mt-1">
+                    {workspaces.length || 1}
+                  </div>
+                </div>
+              </div>
+
+              {/* Export Option 1: Full JSON Archive */}
+              <div className="p-5 bg-indigo-50/40 rounded-2xl border border-indigo-100/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-xs shrink-0 mt-0.5">
+                    <Archive className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-900">
+                      {language === "ka" ? "სრული მონაცემების არქივი (JSON)" : "Full Organization Archive (JSON)"}
+                    </h4>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      {language === "ka"
+                        ? "შეიცავს ყველა ინვოისს, პროდუქტების დეტალებს, ბიუჯეტებსა და სივრცეებს სრული სტრუქტურით."
+                        : "Includes raw document arrays, line items, timestamps, and configuration."}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const exportPayload = {
+                      company_name: companyName,
+                      user_email: userEmail,
+                      exported_at: new Date().toISOString(),
+                      total_invoices: invoices.length,
+                      invoices,
+                      workspaces,
+                      budgets
+                    };
+                    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${companyName || "company"}_full_backup_${new Date().toISOString().split("T")[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{language === "ka" ? "JSON ჩამოტვირთვა" : "Download JSON"}</span>
+                </button>
+              </div>
+
+              {/* Export Option 2: CSV Spreadsheet */}
+              <div className="p-5 bg-slate-50/60 rounded-2xl border border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs shrink-0 mt-0.5">
+                    <FileSpreadsheet className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-900">
+                      {language === "ka" ? "ინვოისების ცხრილი (CSV)" : "Invoices Spreadsheet (CSV)"}
+                    </h4>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      {language === "ka"
+                        ? "თავსებადია Excel-თან, Google Sheets-თან და საბუღალტრო პროგრამებთან."
+                        : "Compatible with Excel, Google Sheets, and standard financial software."}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const headers = ["ID", "Vendor", "Date", "Amount", "Currency", "Category", "Items Count", "File Name", "Uploaded At"];
+                    const rows = invoices.map((inv) => [
+                      `"${inv.id}"`,
+                      `"${(inv.vendor || "").replace(/"/g, '""')}"`,
+                      `"${inv.date || ""}"`,
+                      inv.amount || 0,
+                      `"${inv.currency || "GEL"}"`,
+                      `"${inv.category || ""}"`,
+                      inv.items ? inv.items.length : 0,
+                      `"${(inv.fileName || "").replace(/"/g, '""')}"`,
+                      `"${inv.uploadedAt || ""}"`
+                    ]);
+                    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${companyName || "company"}_invoices_${new Date().toISOString().split("T")[0]}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{language === "ka" ? "CSV ჩამოტვირთვა" : "Download CSV"}</span>
+                </button>
+              </div>
             </div>
           )}
 
