@@ -64,6 +64,9 @@ import AcceptInviteView from "./components/AcceptInviteView";
 import { PasswordResetView } from "./components/PasswordResetView";
 import OnboardingChecklist from "./components/OnboardingChecklist";
 import { PRICING } from "./config/pricing";
+import OverviewPage from "./pages/OverviewPage";
+import InvoicesPage from "./pages/InvoicesPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
 
 export default function App() {
   // Invite token detection from URL
@@ -125,12 +128,30 @@ export default function App() {
     }
   }, [isAuthenticated, user?.company_id]);
 
-  const [currentView, setCurrentView] = useState<"landing" | "login" | "signup" | "create-company" | "settings" | "team" | "not-found" | "dashboard" | "forgot_password" | "reset_password">(() => {
+  // View state including overview (dashboard), invoices, analytics
+  const [currentView, setCurrentView] = useState<
+    | "landing"
+    | "login"
+    | "signup"
+    | "create-company"
+    | "settings"
+    | "team"
+    | "not-found"
+    | "dashboard"
+    | "invoices"
+    | "analytics"
+    | "forgot_password"
+    | "reset_password"
+  >(() => {
     const path = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
     if (path.startsWith("/reset-password/") || params.get("token") || params.get("reset_token")) {
       return "reset_password";
     }
+    const hash = window.location.hash.toLowerCase();
+    if (hash === "#invoices") return "invoices";
+    if (hash === "#analytics") return "analytics";
+    if (hash === "#overview" || hash === "#dashboard") return "dashboard";
     return "landing";
   });
   const [placeholderModal, setPlaceholderModal] = useState<"terms" | "privacy" | null>(null);
@@ -147,6 +168,46 @@ export default function App() {
   const userPermissions: UserPermissions = {
     ...rawPermissions,
   };
+
+  // Sync URL hash with currentView for navigation and back/forward browser buttons
+  useEffect(() => {
+    if (!isAuthenticated || !user?.company_id) return;
+    
+    if (currentView === "dashboard") {
+      if (window.location.hash !== "#overview") {
+        window.history.replaceState(null, "", "#overview");
+      }
+    } else if (currentView === "invoices") {
+      if (window.location.hash !== "#invoices") {
+        window.history.replaceState(null, "", "#invoices");
+      }
+    } else if (currentView === "analytics") {
+      if (window.location.hash !== "#analytics") {
+        window.history.replaceState(null, "", "#analytics");
+      }
+    }
+  }, [currentView, isAuthenticated, user?.company_id]);
+
+  // Listen to browser hashchange (for Back/Forward buttons)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const path = window.location.pathname;
+      if (path.startsWith("/reset-password/")) return;
+      if (!isAuthenticated || !user?.company_id) return;
+
+      const hash = window.location.hash.toLowerCase();
+      if (hash === "#overview" || hash === "#dashboard") {
+        setCurrentView("dashboard");
+      } else if (hash === "#invoices") {
+        setCurrentView("invoices");
+      } else if (hash === "#analytics") {
+        setCurrentView("analytics");
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [isAuthenticated, user?.company_id]);
 
   // Keep currentView synchronized with authentication state
   useEffect(() => {
@@ -176,7 +237,14 @@ export default function App() {
           currentView === "forgot_password" ||
           currentView === "reset_password"
         ) {
-          setCurrentView("dashboard");
+          const hash = window.location.hash.toLowerCase();
+          if (hash === "#invoices") {
+            setCurrentView("invoices");
+          } else if (hash === "#analytics") {
+            setCurrentView("analytics");
+          } else {
+            setCurrentView("dashboard");
+          }
         }
       }
     }
@@ -433,19 +501,7 @@ export default function App() {
   const [hasCustomBudget, setHasCustomBudget] = useState<boolean>(() => {
     try {
       const key = `antx_onboarding_budget_customized_${user?.company_id || "default"}`;
-      if (localStorage.getItem(key) === "true") return true;
-      const saved = localStorage.getItem("antx_invoice_budgets_v1");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (
-          parsed &&
-          (parsed.GEL?.office !== 500 ||
-            parsed.USD?.office !== 200 ||
-            Object.keys(parsed).length > 3)
-        ) {
-          return true;
-        }
-      }
+      return localStorage.getItem(key) === "true";
     } catch (_) {}
     return false;
   });
@@ -454,6 +510,9 @@ export default function App() {
     newBudgets: Record<string, Record<ExpenseCategory, number>>
   ) => {
     setBudgets(newBudgets);
+  };
+
+  const handleBudgetEditedByUser = () => {
     setHasCustomBudget(true);
     try {
       const key = `antx_onboarding_budget_customized_${user?.company_id || "default"}`;
@@ -1475,7 +1534,7 @@ export default function App() {
             <p className="text-indigo-200/80 text-sm leading-relaxed max-w-md font-medium">
               {language === "ka" 
                 ? "ატვირთეთ ნებისმიერი დოკუმენტი, ხოლო Gemini AI უმოკლეს დროში მოახდენს მის სრულ ანალიზს."
-                : "Join hundreds of financial offices streamlining bookkeeping via secure, automatic context extraction."}
+                : "Upload any document and Gemini AI analyzes it in seconds."}
             </p>
 
             <div className="space-y-4 pt-6">
@@ -1849,6 +1908,59 @@ export default function App() {
               </p>
             </div>
           </div>
+
+          {/* Desktop Navigation Tabs: მიმოხილვა · ინვოისები · ანალიტიკა · გუნდი */}
+          {currentUser && (
+            <nav className="hidden lg:flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
+              <button
+                type="button"
+                onClick={() => setCurrentView("dashboard")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  currentView === "dashboard"
+                    ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
+                {language === "ka" ? "მიმოხილვა" : "Overview"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentView("invoices")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  currentView === "invoices"
+                    ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
+                {language === "ka" ? "ინვოისები" : "Invoices"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentView("analytics")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  currentView === "analytics"
+                    ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
+                {language === "ka" ? "ანალიტიკა" : "Analytics"}
+              </button>
+              {userPermissions.manageTeam && activePlan === "multi" && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("team")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    currentView === "team"
+                      ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{language === "ka" ? "გუნდი" : "Team"}</span>
+                </button>
+              )}
+            </nav>
+          )}
 
           {/* Full Desktop Controls (visible on xl screens, 1280px+) */}
           <div className="hidden xl:flex items-center space-x-3 shrink-0">
@@ -2624,6 +2736,59 @@ export default function App() {
               </div>
             </div>
 
+            {/* Mobile Navigation Links */}
+            {currentUser && (
+              <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  {language === "ka" ? "ნავიგაცია" : "Navigation"}
+                </span>
+                <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentView("dashboard");
+                      setShowMobileMenu(false);
+                    }}
+                    className={`py-2 px-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
+                      currentView === "dashboard"
+                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                  >
+                    {language === "ka" ? "მიმოხილვა" : "Overview"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentView("invoices");
+                      setShowMobileMenu(false);
+                    }}
+                    className={`py-2 px-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
+                      currentView === "invoices"
+                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                  >
+                    {language === "ka" ? "ინვოისები" : "Invoices"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentView("analytics");
+                      setShowMobileMenu(false);
+                    }}
+                    className={`py-2 px-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
+                      currentView === "analytics"
+                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                  >
+                    {language === "ka" ? "ანალიტიკა" : "Analytics"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Settings & Team & Logout for Mobile */}
             {currentUser && (
               <div className="pt-3 border-t border-slate-100 space-y-2">
@@ -2719,626 +2884,86 @@ export default function App() {
             language={language}
             onGoHome={() => setCurrentView("dashboard")}
           />
+        ) : currentView === "invoices" ? (
+          <InvoicesPage
+            language={language}
+            invoices={invoices}
+            workspaceInvoices={workspaceInvoices}
+            filteredInvoices={filteredInvoices}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            dateRangeFilter={dateRangeFilter}
+            onDateRangeChange={setDateRangeFilter}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            isLoadingInvoices={isLoadingInvoices}
+            isAnalyzing={isAnalyzing}
+            uploadError={error}
+            canUpload={currentRolePermissions.canUpload}
+            canDelete={currentRolePermissions.canDelete}
+            isInvoiceOverBudget={isInvoiceOverBudget}
+            showExportDropdown={showExportDropdown}
+            onToggleExportDropdown={() => setShowExportDropdown(!showExportDropdown)}
+            onCloseExportDropdown={() => setShowExportDropdown(false)}
+            onUpload={handleUpload}
+            onAddManual={handleAddManual}
+            onSelectInvoice={(inv) => setSelectedInvoice(inv)}
+            onDeleteInvoice={handleDelete}
+            onClearAll={handleClearAll}
+            onExportCsv={handleExportCsv}
+            onExportExcel={handleExportExcel}
+            onOpenPdfReport={() => setShowPdfReport(true)}
+          />
+        ) : currentView === "analytics" ? (
+          <AnalyticsPage
+            language={language}
+            invoices={workspaceInvoices}
+            budgets={budgets}
+            canManageBudgets={currentRolePermissions.manageBudgets}
+            onBudgetsChanged={handleBudgetsUpdated}
+            onBudgetEditedByUser={handleBudgetEditedByUser}
+            onRatesChanged={(rates) => setExchangeRates(rates as any)}
+          />
         ) : (
-          <>
-        
-        {/* Intro */}
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            {t.title}
-          </h2>
-          {t.subtitle && (
-            <p className="text-slate-500 mt-2 text-sm sm:text-base leading-relaxed">
-              {t.subtitle}
-            </p>
-          )}
-        </div>
-
-        {/* Onboarding Checklist for new users */}
-        <OnboardingChecklist
-          language={language}
-          invoicesCount={invoices.length}
-          hasCustomBudget={hasCustomBudget}
-          teamMembersCount={teamMembersCount}
-          hasExported={hasExported}
-          isMultiPlan={activePlan === "multi"}
-          userIdOrCompany={user?.company_id || user?.email || "default"}
-          onNavigateToUpload={() => {
-            const el = document.getElementById("upload-zone-container");
-            if (el) {
-              el.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-          }}
-          onNavigateToBudget={() => {
-            const el = document.getElementById("budget-analytics-section");
-            if (el) {
-              el.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-          }}
-          onNavigateToTeam={() => {
-            if (activePlan === "multi" && userPermissions.manageTeam) {
-              setCurrentView("team");
-            } else {
-              showToast(
-                language === "ka"
-                  ? "გუნდის მართვა ხელმისაწვდომია Multi ტარიფზე"
-                  : "Team management is available on Multi plan",
-                "error"
-              );
-            }
-          }}
-          onNavigateToExport={() => {
-            const el = document.getElementById("invoices-table-section");
-            if (el) {
-              el.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            setShowExportDropdown(true);
-          }}
-        />
-
-        {/* Premium Tools Section */}
-        <div className="grid grid-cols-1 gap-4">
-          <LiveExchangeRates
-            language={language}
-            onRatesChanged={(rates) => setExchangeRates(rates)}
-          />
-        </div>
-
-        {/* Upload Zone */}
-        <div id="upload-zone-container" className="max-w-3xl mx-auto">
-          {currentRolePermissions.canUpload ? (
-            <InvoiceUploadZone 
-              language={language}
-              onUpload={handleUpload}
-              isAnalyzing={isAnalyzing}
-            />
-          ) : (
-            <div className="bg-slate-50 border border-dashed border-slate-300 rounded-3xl p-8 text-center text-slate-500 shadow-sm flex flex-col items-center justify-center space-y-3.5 animate-fadeIn">
-              <div className="p-3.5 bg-rose-50 text-rose-500 rounded-2xl border border-rose-100">
-                <Lock className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-sm font-black text-slate-700">
-                  {language === "ka" ? "დოკუმენტების ატვირთვა შეზღუდულია" : "Document Uploading Restricted"}
-                </p>
-                <p className="text-[11px] text-slate-400 font-semibold max-w-sm mt-1 mx-auto leading-normal">
-                  {language === "ka" 
-                    ? "მფლობელმა ამ როლისთვის გამორთო ინვოისების/ჩეკების ატვირთვის ფუნქცია. მის გასააქტიურებლად შეცვალეთ ნებართვები როლების სიმულატორიდან." 
-                    : "The owner has locked document upload privileges for this role. Customize this setting using the Admin/Owner simulator above."}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Server status/error alerts */}
-        {error && (
-          <div className="max-w-3xl mx-auto p-4 bg-amber-50/70 backdrop-blur-sm text-amber-900 rounded-2xl border border-amber-200/50 text-sm flex gap-3 shadow-sm animate-fadeIn">
-            <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
-            <div className="space-y-1">
-              <p className="font-semibold">{t.errorMsg}</p>
-              <p className="text-amber-800">{error}</p>
-              <p className="text-xs text-amber-500 mt-1 font-medium">
-                {language === "ka" 
-                  ? "მინიშნება: დარწმუნდით, რომ ჩართეთ Gemini API-ის საიდუმლო გასაღები AI Studio პარამეტრებიდან."
-                  : "Tip: Make sure you have added your GEMINI_API_KEY in the Secrets tab of the AI Studio settings."}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Premium AI Financial Insights */}
-        {currentRolePermissions.viewAnalytics && (
-          <SmartInsights
+          /* OverviewPage (currentView === "dashboard") */
+          <OverviewPage
             language={language}
             invoices={workspaceInvoices}
-            currency="GEL"
-            budgets={budgets.GEL}
+            allInvoices={invoices}
+            budgets={budgets}
+            activePlan={activePlan}
+            userEmail={currentUser?.email || ""}
+            userCompany={userCompany}
+            hasCustomBudget={hasCustomBudget}
+            teamMembersCount={teamMembersCount}
+            hasExported={hasExported}
+            canUpload={currentRolePermissions.canUpload}
+            canManageTeam={userPermissions.manageTeam}
+            onNavigateToView={(view) => {
+              if (view === "overview") setCurrentView("dashboard");
+              else setCurrentView(view);
+            }}
+            onOpenUpload={() => {
+              setCurrentView("invoices");
+              setTimeout(() => {
+                const el = document.getElementById("upload-zone-container");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 100);
+            }}
+            onOpenManual={handleAddManual}
+            onOpenExport={() => {
+              setCurrentView("invoices");
+              setTimeout(() => {
+                setShowExportDropdown(true);
+                const el = document.getElementById("export-dropdown-btn");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 100);
+            }}
+            onSelectInvoice={(inv) => setSelectedInvoice(inv)}
           />
-        )}
-
-        {/* Invoice Summary and Stats Cards */}
-        {currentRolePermissions.viewAnalytics && (
-          <InvoiceSummaryCards language={language} invoices={workspaceInvoices} />
-        )}
-
-        {/* Interactive Spend Analytics & Category Budgets */}
-        {currentRolePermissions.viewAnalytics && (
-          <div id="budget-analytics-section">
-            <InvoiceAnalytics 
-              language={language} 
-              invoices={workspaceInvoices} 
-              onBudgetsChanged={handleBudgetsUpdated} 
-              canManageBudgets={currentRolePermissions.manageBudgets}
-            />
-          </div>
-        )}
-
-        {/* Vendor & Supplier Spend Analysis */}
-        {currentRolePermissions.viewAnalytics && (
-          <VendorAnalytics
-            language={language}
-            invoices={workspaceInvoices}
-          />
-        )}
-
-        {/* Main Table Area */}
-        <div id="invoices-table-section" className="bg-white/70 backdrop-blur-xl border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col">
-          {/* Controls Bar */}
-          <div className="p-5 border-b border-slate-200/40 bg-slate-50/30 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-            {/* Left: Search & Filter */}
-            <div className="flex flex-1 flex-col sm:flex-row gap-3">
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input
-                  id="search-input"
-                  type="text"
-                  placeholder={t.searchPlaceholder}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-slate-200/60 rounded-xl bg-white/60 backdrop-blur-sm text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
-                />
-              </div>
-
-              {/* Category Dropdown */}
-              <div className="relative">
-                <select
-                  id="category-filter"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full sm:w-48 pl-3 pr-8 py-2 border border-slate-200/60 rounded-xl bg-white/60 backdrop-blur-sm text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="all">📁 {t.allCategories}</option>
-                  {Object.entries(CATEGORY_LABELS).map(([key, lbl]) => (
-                    <option key={key} value={key}>
-                      {language === "ka" ? lbl.ka : lbl.en}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                  <Filter className="w-3.5 h-3.5" />
-                </div>
-              </div>
-
-              {/* Date Filter Dropdown */}
-              <div className="relative">
-                <select
-                  id="date-filter"
-                  value={dateRangeFilter}
-                  onChange={(e) => setDateRangeFilter(e.target.value as any)}
-                  className="w-full sm:w-40 pl-3 pr-8 py-2 border border-slate-200/60 rounded-xl bg-white/60 backdrop-blur-sm text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="all">📅 {t.allTime}</option>
-                  <option value="this_month">📅 {t.thisMonth}</option>
-                  <option value="last_30">📅 {t.last30Days}</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                  <Filter className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Actions */}
-            <div className="flex gap-2.5 shrink-0">
-              {/* Create Custom Invoice Button */}
-              <button
-                type="button"
-                onClick={() => currentRolePermissions.canUpload && handleAddManual()}
-                disabled={!currentRolePermissions.canUpload}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 border rounded-xl text-sm font-bold shadow-sm transition-all duration-200 ${
-                  currentRolePermissions.canUpload
-                    ? "border-indigo-200 bg-indigo-50 hover:bg-indigo-100/70 text-indigo-700 cursor-pointer hover:scale-[1.02] active:scale-[0.98] hover:shadow-md"
-                    : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
-                }`}
-                title={currentRolePermissions.canUpload 
-                  ? (language === "ka" ? "ინვოისის ხელით შექმნა" : "Create Manual Invoice")
-                  : (language === "ka" ? "შექმნა შეზღუდულია მფლობელის მიერ" : "Creation locked by Owner")
-                }
-              >
-                {currentRolePermissions.canUpload ? (
-                  <Plus className="w-4 h-4 text-indigo-600 animate-pulse" />
-                ) : (
-                  <Lock className="w-4 h-4 text-slate-400" />
-                )}
-                <span className="hidden sm:inline">{language === "ka" ? "ინვოისის შექმნა" : "Create Invoice"}</span>
-              </button>
-
-              {/* Export Dropdown */}
-              <div className="relative">
-                <button
-                  id="export-dropdown-btn"
-                  onClick={() => setShowExportDropdown(!showExportDropdown)}
-                  disabled={filteredInvoices.length === 0}
-                  className={`inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold shadow-md transition-all duration-200 cursor-pointer ${
-                    filteredInvoices.length === 0 ? "opacity-50 cursor-not-allowed hover:bg-slate-900" : "hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
-                  }`}
-                >
-                  <Download className="w-4 h-4" />
-                  <span>{t.exportMenu}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showExportDropdown ? "rotate-180" : ""}`} />
-                </button>
-
-                {showExportDropdown && (
-                  <div className="absolute right-0 mt-2 w-52 bg-white/90 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 animate-fadeIn">
-                    <button
-                      onClick={() => {
-                        handleExportCsv();
-                        setShowExportDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-indigo-50/50 hover:text-indigo-600 transition-colors flex items-center gap-2.5 cursor-pointer"
-                    >
-                      <span className="text-[9px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded font-extrabold uppercase">CSV</span>
-                      {t.exportCsv}
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleExportExcel();
-                        setShowExportDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-emerald-50/80 hover:text-emerald-700 transition-colors flex items-center gap-2.5 cursor-pointer"
-                    >
-                      <span className="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-extrabold uppercase">XLS</span>
-                      {t.exportExcel}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowPdfReport(true);
-                        setShowExportDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-rose-50/80 hover:text-rose-700 transition-colors flex items-center gap-2.5 cursor-pointer"
-                    >
-                      <span className="text-[9px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded font-extrabold uppercase">PDF</span>
-                      {language === "ka" ? "ბრენდირებული PDF რეპორტი" : "Branded PDF Report"}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Clear all */}
-              {workspaceInvoices.length > 0 && currentRolePermissions.canDelete && (
-                <button
-                  onClick={handleClearAll}
-                  className="p-2 text-red-500 hover:bg-red-50/80 rounded-xl transition-all border border-transparent hover:border-red-100 cursor-pointer"
-                  title={t.clearAll}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Table proper */}
-          <div className="overflow-x-auto hidden md:block">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-200/60 select-none">
-                  <th 
-                    className="px-6 py-4 cursor-pointer hover:bg-slate-100/60 hover:text-indigo-600 transition-all rounded-tl-2xl group"
-                    onClick={() => handleSort("vendor")}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>{t.vendor}</span>
-                      <div className="flex flex-col shrink-0">
-                        <ChevronUp className={`w-3 h-3 -mb-1 transition-colors ${sortColumn === "vendor" && sortDirection === "asc" ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-400"}`} />
-                        <ChevronDown className={`w-3 h-3 transition-colors ${sortColumn === "vendor" && sortDirection === "desc" ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-400"}`} />
-                      </div>
-                    </div>
-                  </th>
-                  <th 
-                    className="px-6 py-4 cursor-pointer hover:bg-slate-100/60 hover:text-indigo-600 transition-all group"
-                    onClick={() => handleSort("date")}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>{t.date}</span>
-                      <div className="flex flex-col shrink-0">
-                        <ChevronUp className={`w-3 h-3 -mb-1 transition-colors ${sortColumn === "date" && sortDirection === "asc" ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-400"}`} />
-                        <ChevronDown className={`w-3 h-3 transition-colors ${sortColumn === "date" && sortDirection === "desc" ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-400"}`} />
-                      </div>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4">{t.category}</th>
-                  <th className="px-6 py-4">{t.items}</th>
-                  <th 
-                    className="px-6 py-4 text-right cursor-pointer hover:bg-slate-100/60 hover:text-indigo-600 transition-all group"
-                    onClick={() => handleSort("amount")}
-                  >
-                    <div className="flex items-center justify-end gap-1.5">
-                      <span>{t.total}</span>
-                      <div className="flex flex-col shrink-0">
-                        <ChevronUp className={`w-3 h-3 -mb-1 transition-colors ${sortColumn === "amount" && sortDirection === "asc" ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-400"}`} />
-                        <ChevronDown className={`w-3 h-3 transition-colors ${sortColumn === "amount" && sortDirection === "desc" ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-400"}`} />
-                      </div>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-center w-32">{t.actions}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {isLoadingInvoices ? (
-                  Array.from({ length: 4 }).map((_, index) => (
-                    <tr key={index} className="animate-pulse border-b border-slate-100">
-                      <td className="px-6 py-5">
-                        <div className="h-4 bg-slate-200/80 rounded w-2/3 mb-2"></div>
-                        <div className="h-3 bg-slate-100 rounded w-1/2"></div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="h-4 bg-slate-200/80 rounded w-1/3"></div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="h-6 bg-slate-200/80 rounded-lg w-20"></div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="h-4 bg-slate-200/80 rounded w-1/2"></div>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="h-4 bg-slate-200/80 rounded w-1/3 ml-auto"></div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="h-8 bg-slate-200/80 rounded-lg w-16 mx-auto"></div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  filteredInvoices.map((inv) => {
-                    const categoryLabel = CATEGORY_LABELS[inv.category] || CATEGORY_LABELS.other;
-                    const categoryColor = CATEGORY_COLORS[inv.category] || CATEGORY_COLORS.other;
-
-                    return (
-                      <tr key={inv.id} className="hover:bg-indigo-50/20 hover:shadow-sm border-l-2 border-l-transparent hover:border-l-indigo-500 transition-all duration-200">
-                        {/* Vendor & doc name */}
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-slate-900">{inv.vendor}</div>
-                          <div className="text-xs text-slate-400 mt-0.5 truncate max-w-[180px] font-medium" title={inv.fileName}>
-                            📄 {inv.fileName}
-                          </div>
-                        </td>
-
-                        {/* Date */}
-                        <td className="px-6 py-4 text-slate-500 whitespace-nowrap font-medium">
-                          {inv.date}
-                        </td>
-
-                        {/* Category Badge */}
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1 items-start">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${categoryColor}`}>
-                              {language === "ka" ? categoryLabel.ka : categoryLabel.en}
-                            </span>
-                            {isInvoiceOverBudget(inv.category, inv.currency) && (
-                              <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-red-600 bg-red-50 border border-red-200/50 rounded-md px-1.5 py-0.5 uppercase tracking-wider animate-pulse">
-                                <AlertCircle className="w-2.5 h-2.5 shrink-0" />
-                                <span>{language === "ka" ? "ლიმიტს გარეთ" : "Over Budget"}</span>
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Purchased products summary */}
-                        <td className="px-6 py-4 max-w-[240px]">
-                          <div className="text-slate-600 truncate font-medium" title={inv.items.map((i) => i.name).join(", ")}>
-                            {inv.items.length > 0 
-                              ? inv.items.map((i) => i.name).join(", ") 
-                              : "-"}
-                          </div>
-                          {inv.items.length > 1 && (
-                            <span className="inline-flex mt-1 text-[10px] font-bold bg-white/60 text-slate-500 px-1.5 py-0.5 rounded-lg border border-slate-200/40">
-                              +{inv.items.length - 1} {language === "ka" ? "სხვა" : "more"}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Total Amount */}
-                        <td className="px-6 py-4 text-right font-bold text-slate-900 whitespace-nowrap">
-                          {inv.amount.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}{" "}
-                          <span className="text-xs font-semibold text-slate-400">{inv.currency}</span>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <div className="flex items-center justify-center space-x-1.5">
-                            <button
-                              onClick={() => setSelectedInvoice(inv)}
-                              className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-200/50 transition-all cursor-pointer"
-                              title={t.viewDocument}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            {currentRolePermissions.canDelete && (
-                              <button
-                                onClick={() => handleDelete(inv.id)}
-                                className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-white rounded-lg border border-transparent hover:border-red-100 transition-all cursor-pointer"
-                                title={t.delete}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-
-                {/* Empty State */}
-                {!isLoadingInvoices && filteredInvoices.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center justify-center max-w-md mx-auto">
-                        <div className="p-4 bg-indigo-50 text-indigo-600 rounded-3xl mb-4 shadow-sm border border-indigo-100/40">
-                          <FileText className="w-10 h-10" />
-                        </div>
-                        <h3 className="font-extrabold text-slate-950 text-lg tracking-tight">
-                          {invoices.length === 0 
-                            ? t.noData 
-                            : (language === "ka" ? "ფილტრის შესაბამისი ინვოისები არ მოიძებნა." : "No invoices matched your filters.")}
-                        </h3>
-                        <p className="text-slate-500 mt-2 text-xs font-medium leading-relaxed">
-                          {invoices.length === 0 
-                            ? (language === "ka" 
-                                ? "ატვირთეთ ინვოისის PDF, JPG, ან PNG დოკუმენტი Gemini-ით ავტომატური ანალიზისთვის, ან დაამატეთ ხელით."
-                                : "Upload PDF, JPG, or PNG invoice documents to automatically parse details using Gemini AI, or add one manually.")
-                            : (language === "ka" 
-                                ? "შეცვალეთ საძიებო სიტყვა, თარიღის დიაპაზონი ან კატეგორიის ფილტრი სხვა მონაცემების სანახავად."
-                                : "Adjust your search phrase, date range, or category filter to view other entries.")}
-                        </p>
-                        {invoices.length === 0 && (
-                          <div className="mt-6 flex flex-wrap gap-3 justify-center">
-                            <button
-                              onClick={() => {
-                                const el = document.getElementById("upload-zone-container");
-                                if (el) {
-                                  el.scrollIntoView({ behavior: "smooth", block: "center" });
-                                }
-                              }}
-                              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-indigo-100 hover:shadow-indigo-200 cursor-pointer"
-                            >
-                              {language === "ka" ? "ატვირთე პირველი დოკუმენტი" : "Upload First Document"}
-                            </button>
-                            {currentRolePermissions.canUpload && (
-                              <button
-                                onClick={handleAddManual}
-                                className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer"
-                              >
-                                {language === "ka" ? "მექანიკური შეყვანა" : "Manual Entry"}
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Card List (block md:hidden) */}
-          <div className="block md:hidden p-4 space-y-4">
-            {isLoadingInvoices ? (
-              Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="bg-white/80 border border-slate-200/50 rounded-2xl p-4 space-y-3 animate-pulse">
-                  <div className="flex justify-between items-start">
-                    <div className="h-4 bg-slate-200 rounded w-1/2"></div>
-                    <div className="h-4 bg-slate-200 rounded w-1/4"></div>
-                  </div>
-                  <div className="h-3 bg-slate-100 rounded w-2/3"></div>
-                  <div className="flex justify-between items-center pt-2">
-                    <div className="h-6 bg-slate-200 rounded-lg w-16"></div>
-                    <div className="h-8 bg-slate-200 rounded-lg w-12"></div>
-                  </div>
-                </div>
-              ))
-            ) : filteredInvoices.length === 0 ? (
-              <div className="py-12 text-center">
-                <div className="p-4 bg-indigo-50 text-indigo-600 rounded-3xl mx-auto w-fit mb-4 shadow-sm border border-indigo-100/40">
-                  <FileText className="w-8 h-8" />
-                </div>
-                <h3 className="font-extrabold text-slate-950 text-base tracking-tight">
-                  {invoices.length === 0 
-                    ? t.noData 
-                    : (language === "ka" ? "ფილტრის შესაბამისი ინვოისები არ მოიძებნა." : "No invoices matched filters.")}
-                </h3>
-                <p className="text-slate-500 mt-1.5 text-[11px] font-medium leading-relaxed max-w-xs mx-auto">
-                  {invoices.length === 0 
-                    ? (language === "ka" 
-                        ? "ატვირთეთ ინვოისის PDF, JPG, ან PNG დოკუმენტი Gemini-ით ანალიზისთვის, ან დაამატეთ ხელით."
-                        : "Upload document to analyze, or add one manually.")
-                    : (language === "ka" 
-                        ? "შეცვალეთ საძიებო სიტყვა ან კატეგორიის ფილტრი სხვა მონაცემების სანახავად."
-                        : "Adjust search phrase or category filter.")}
-                </p>
-              </div>
-            ) : (
-              filteredInvoices.map((inv) => {
-                const categoryLabel = CATEGORY_LABELS[inv.category] || CATEGORY_LABELS.other;
-                const categoryColor = CATEGORY_COLORS[inv.category] || CATEGORY_COLORS.other;
-
-                return (
-                  <div
-                    key={inv.id}
-                    className="bg-white/80 border border-slate-200/50 rounded-2xl p-4 shadow-sm space-y-3 hover:border-indigo-200 transition-all cursor-pointer active:scale-[0.99]"
-                    onClick={() => setSelectedInvoice(inv)}
-                  >
-                    <div className="flex justify-between items-start gap-2">
-                      <div>
-                        <h4 className="font-extrabold text-slate-900 text-sm leading-tight truncate max-w-[160px]">{inv.vendor || "Unknown"}</h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[160px]">
-                          📄 {inv.fileName}
-                        </p>
-                      </div>
-                      <div className="text-right whitespace-nowrap shrink-0">
-                        <span className="font-extrabold text-slate-950 text-sm">
-                          {inv.amount.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}{" "}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">{inv.currency}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-100/60">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${categoryColor}`}>
-                          {language === "ka" ? categoryLabel.ka : categoryLabel.en}
-                        </span>
-                        {isInvoiceOverBudget(inv.category, inv.currency) && (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-red-600 bg-red-50 border border-red-200/50 rounded-md px-1.5 py-0.5 uppercase tracking-wider animate-pulse">
-                            <AlertCircle className="w-2 h-2 shrink-0" />
-                            <span>{language === "ka" ? "ლიმიტს გარეთ" : "Over Budget"}</span>
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[10px] font-semibold text-slate-400">{inv.date}</span>
-                    </div>
-
-                    {inv.items && inv.items.length > 0 && (
-                      <div className="text-[10px] font-medium text-slate-500 bg-slate-50/50 rounded-xl p-2 max-w-full">
-                        <span className="font-bold text-slate-400 block mb-0.5 text-[8px] uppercase tracking-widest">
-                          {language === "ka" ? "პროდუქტები" : "Purchased items"}
-                        </span>
-                        <div className="truncate text-slate-600">
-                          {inv.items.map((i) => i.name).join(", ")}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-end gap-2 pt-1.5">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedInvoice(inv);
-                        }}
-                        className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>{language === "ka" ? "დეტალები" : "Details"}</span>
-                      </button>
-                      {currentRolePermissions.canDelete && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(inv.id);
-                          }}
-                          className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-        </>
         )}
       </main>
 

@@ -159,8 +159,43 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
     localStorage.setItem(storageKeyDismissed, "true");
   };
 
-  // If dismissed or permanently completed (and not currently celebrating), don't render
-  if ((isDismissed || isPermanentlyCompleted) && !showCelebration) {
+  // If permanently completed (and not currently celebrating), don't render at all
+  if (isPermanentlyCompleted && !showCelebration) {
+    return null;
+  }
+
+  // If dismissed by user but not all steps are completed yet, render a compact 1-line bar:
+  // „პირველი ნაბიჯები: 2/4 — გაგრძელება"
+  if (isDismissed && !allCompleted && !showCelebration) {
+    return (
+      <div className="w-full bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800 rounded-2xl px-4 py-2.5 shadow-sm flex items-center justify-between gap-3 animate-fadeIn">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shrink-0" />
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-250 truncate">
+            {language === "ka"
+              ? `პირველი ნაბიჯები: ${completedCount}/${totalSteps} — გაგრძელება`
+              : `Getting Started: ${completedCount}/${totalSteps} — Continue`}
+          </span>
+          <span className="hidden sm:inline-block text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
+            {progressPercent}%
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setIsDismissed(false);
+            localStorage.removeItem(storageKeyDismissed);
+          }}
+          className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline shrink-0 flex items-center gap-1 cursor-pointer"
+        >
+          <span>{language === "ka" ? "გახსნა" : "Open"}</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  if (isDismissed && allCompleted && !showCelebration) {
     return null;
   }
 

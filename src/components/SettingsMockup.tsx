@@ -601,26 +601,28 @@ export default function SettingsMockup({
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="pt-4 border-t border-slate-100 flex justify-end">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-xs rounded-xl shadow-md shadow-indigo-100 flex items-center gap-2 transition-all cursor-pointer"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{language === "ka" ? "ინახება..." : "Saving..."}</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>{language === "ka" ? "ცვლილებების შენახვა" : "Save Changes"}</span>
-                </>
-              )}
-            </button>
-          </div>
+          {/* Action Buttons (Hide on Security and Export tabs where inputs are disabled or informational) */}
+          {activeTab !== "security" && activeTab !== "export" && (
+            <div className="pt-4 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-xs rounded-xl shadow-md shadow-indigo-100 flex items-center gap-2 transition-all cursor-pointer"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{language === "ka" ? "ინახება..." : "Saving..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>{language === "ka" ? "ცვლილებების შენახვა" : "Save Changes"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
 
           <div className="text-center bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 text-[10px] font-bold text-slate-500">
             {language === "ka"

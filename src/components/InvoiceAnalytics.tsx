@@ -19,6 +19,7 @@ interface InvoiceAnalyticsProps {
   language: Language;
   invoices: ExtractedInvoice[];
   onBudgetsChanged?: (budgets: Record<string, Record<ExpenseCategory, number>>) => void;
+  onBudgetEditedByUser?: () => void;
   canManageBudgets?: boolean;
 }
 
@@ -32,6 +33,7 @@ export default function InvoiceAnalytics({
   language,
   invoices,
   onBudgetsChanged,
+  onBudgetEditedByUser,
   canManageBudgets = true,
 }: InvoiceAnalyticsProps) {
   const t = TRANSLATIONS[language];
@@ -66,6 +68,9 @@ export default function InvoiceAnalytics({
   }, [budgets, onBudgetsChanged]);
 
   const handleBudgetChange = (category: ExpenseCategory, val: number) => {
+    if (onBudgetEditedByUser) {
+      onBudgetEditedByUser();
+    }
     setBudgets(prev => ({
       ...prev,
       [selectedCurrency]: {
