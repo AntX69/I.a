@@ -63,6 +63,7 @@ import TeamManagement from "./components/TeamManagement";
 import AcceptInviteView from "./components/AcceptInviteView";
 import { PasswordResetView } from "./components/PasswordResetView";
 import OnboardingChecklist from "./components/OnboardingChecklist";
+import { PRICING } from "./config/pricing";
 
 export default function App() {
   // Invite token detection from URL
@@ -638,13 +639,19 @@ export default function App() {
   };
 
   const executeClearAll = () => {
-    saveInvoices([]);
-    setSelectedInvoice(null);
+    const isCurrentWorkspace = (inv: ExtractedInvoice) =>
+      (inv as any).workspace === activeWorkspace || (!(inv as any).workspace && activeWorkspace === workspaces[0]);
+    const toDeleteCount = invoices.filter(isCurrentWorkspace).length;
+    const remaining = invoices.filter((inv) => !isCurrentWorkspace(inv));
+    saveInvoices(remaining);
+    if (selectedInvoice && isCurrentWorkspace(selectedInvoice)) {
+      setSelectedInvoice(null);
+    }
     setConfirmClearAll(false);
     showToast(
       language === "ka"
-        ? "ყველა ინვოისი წარმატებით წაიშალა."
-        : "All invoices cleared successfully.",
+        ? `სივრციდან „${activeWorkspace}" ${toDeleteCount} ინვოისი წარმატებით წაიშალა.`
+        : `Successfully deleted ${toDeleteCount} invoices from workspace "${activeWorkspace}".`,
       "success"
     );
   };
@@ -816,6 +823,22 @@ export default function App() {
     return (inv as any).workspace === activeWorkspace || (!(inv as any).workspace && activeWorkspace === workspaces[0]);
   });
 
+  // Parse YYYY-MM-DD as local calendar date without timezone skew
+  const parseLocalDate = (dateStr: string): Date | null => {
+    if (!dateStr) return null;
+    const parts = dateStr.slice(0, 10).split("-");
+    if (parts.length === 3) {
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+        return new Date(y, m - 1, d);
+      }
+    }
+    const fallback = new Date(dateStr);
+    return isNaN(fallback.getTime()) ? null : new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());
+  };
+
   // Filtering
   const filteredInvoices = workspaceInvoices.filter((inv) => {
     const q = searchQuery.toLowerCase().trim();
@@ -832,15 +855,18 @@ export default function App() {
     // Date range filter matching
     let matchesDate = true;
     if (dateRangeFilter === "this_month") {
-      const today = new Date();
-      const invDate = new Date(inv.date);
-      matchesDate = invDate.getFullYear() === today.getFullYear() && invDate.getMonth() === today.getMonth();
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const invDate = parseLocalDate(inv.date);
+      matchesDate = !!invDate && invDate.getFullYear() === currentYear && invDate.getMonth() === currentMonth;
     } else if (dateRangeFilter === "last_30") {
-      const today = new Date();
-      const invDate = new Date(inv.date);
-      const diffTime = Math.abs(today.getTime() - invDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      matchesDate = diffDays <= 30;
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const thirtyDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+      const invDate = parseLocalDate(inv.date);
+      // Strictly between thirtyDaysAgo and today inclusive (no future dates!)
+      matchesDate = !!invDate && invDate >= thirtyDaysAgo && invDate <= today;
     }
 
     return matchesSearch && matchesCategory && matchesDate;
@@ -1270,7 +1296,7 @@ export default function App() {
                   </span>
                   <h4 className="text-2xl font-black text-white">Single Plan</h4>
                   <div className="text-4xl font-black text-white">
-                    {language === "ka" ? "50 ₾" : "$20"}
+                    {language === "ka" ? `${PRICING.single.GEL} ₾` : `$${PRICING.single.USD}`}
                     <span className="text-sm font-medium text-slate-400"> / {language === "ka" ? "თვე" : "mo"}</span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">
@@ -1322,7 +1348,7 @@ export default function App() {
                   </span>
                   <h4 className="text-2xl font-black text-white">Multi Plan</h4>
                   <div className="text-4xl font-black text-white">
-                    {language === "ka" ? "100 ₾" : "$40"}
+                    {language === "ka" ? `${PRICING.multi.GEL} ₾` : `$${PRICING.multi.USD}`}
                     <span className="text-sm font-medium text-indigo-300"> / {language === "ka" ? "თვე" : "mo"}</span>
                   </div>
                   <p className="text-xs text-indigo-200 font-medium">
@@ -1448,7 +1474,7 @@ export default function App() {
             </h2>
             <p className="text-indigo-200/80 text-sm leading-relaxed max-w-md font-medium">
               {language === "ka" 
-                ? "ატვირთეთ ნებისმიერი დოკუმენტი, ხოლო Gemini 1.5 Flash უმოკლეს დროში მოახდენს მის სრულ ანალიზს."
+                ? "ატვირთეთ ნებისმიერი დოკუმენტი, ხოლო Gemini AI უმოკლეს დროში მოახდენს მის სრულ ანალიზს."
                 : "Join hundreds of financial offices streamlining bookkeeping via secure, automatic context extraction."}
             </p>
 
@@ -1705,7 +1731,7 @@ export default function App() {
                     </div>
                     <div>
                       <span className="text-sm font-black text-slate-950">
-                        {language === "ka" ? "50 ₾" : "$20"}
+                        {language === "ka" ? `${PRICING.single.GEL} ₾` : `$${PRICING.single.USD}`}
                       </span>
                       <span className="text-[10px] text-slate-400 block font-semibold">
                         {language === "ka" ? "1 მომხმარებელი" : "1 seat included"}
@@ -1733,7 +1759,7 @@ export default function App() {
                     </div>
                     <div>
                       <span className="text-sm font-black text-slate-950">
-                        {language === "ka" ? "100 ₾" : "$40"}
+                        {language === "ka" ? `${PRICING.multi.GEL} ₾` : `$${PRICING.multi.USD}`}
                       </span>
                       <span className="text-[10px] text-slate-400 block font-semibold">
                         {language === "ka" ? "გუნდური როლები" : "Multi-role system"}
@@ -2970,7 +2996,7 @@ export default function App() {
               </div>
 
               {/* Clear all */}
-              {invoices.length > 0 && currentRolePermissions.canDelete && (
+              {workspaceInvoices.length > 0 && currentRolePermissions.canDelete && (
                 <button
                   onClick={handleClearAll}
                   className="p-2 text-red-500 hover:bg-red-50/80 rounded-xl transition-all border border-transparent hover:border-red-100 cursor-pointer"
@@ -3374,10 +3400,10 @@ export default function App() {
                 <h3 className="text-lg font-bold text-slate-900">
                   {language === "ka" ? "ყველა ჩანაწერის წაშლა" : "Clear All Records"}
                 </h3>
-                <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+                <p className="text-sm text-slate-500 mt-2 leading-relaxed font-semibold">
                   {language === "ka"
-                    ? "ნამდვილად გსურთ ყველა ჩანაწერის სამუდამოდ წაშლა? ამ მოქმედების გაუქმება შეუძლებელია."
-                    : "Are you sure you want to permanently delete all records? This action cannot be undone."}
+                    ? `წაიშლება ${workspaceInvoices.length} ინვოისი სივრციდან „${activeWorkspace}". სხვა სივრცეები არ შეიცვლება.`
+                    : `${workspaceInvoices.length} invoices will be deleted from workspace "${activeWorkspace}". Other workspaces will not be changed.`}
                 </p>
               </div>
             </div>

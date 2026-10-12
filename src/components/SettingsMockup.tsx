@@ -23,6 +23,7 @@ import {
   Archive
 } from "lucide-react";
 import { Language, ExtractedInvoice } from "../types";
+import { PRICING } from "../config/pricing";
 
 interface SettingsMockupProps {
   language: Language;
@@ -56,18 +57,12 @@ export default function SettingsMockup({
   
   // Tab 2: Billing & Plans States
   const [localPlan, setLocalPlan] = useState<"single" | "multi">(activePlan || "single");
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
 
   // Tab 3: Security States
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [apiKey, setApiKey] = useState("sk_inv_live_7x8y9z0a1b2c3d4e5f6g7h8i9j");
-  const [apiKeyVisible, setApiKeyVisible] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -90,17 +85,6 @@ export default function SettingsMockup({
       return;
     }
 
-    if (activeTab === "security" && newPassword) {
-      if (newPassword !== confirmPassword) {
-        setError(language === "ka" ? "ახალი პაროლები არ ემთხვევა ერთმანეთს" : "New passwords do not match");
-        return;
-      }
-      if (newPassword.length < 6) {
-        setError(language === "ka" ? "ახალი პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო" : "New password must be at least 6 characters");
-        return;
-      }
-    }
-
     setIsSaving(true);
     setError(null);
     setSaveSuccess(false);
@@ -110,13 +94,6 @@ export default function SettingsMockup({
       await onUpdateSettings(localCompanyName.trim(), localPlan);
       
       setSaveSuccess(true);
-      
-      // Clear password fields on successful save
-      if (activeTab === "security") {
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      }
 
       setTimeout(() => {
         setSaveSuccess(false);
@@ -125,28 +102,6 @@ export default function SettingsMockup({
       setError(err?.message || (language === "ka" ? "შენახვა ვერ მოხერხდა" : "Failed to save settings"));
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleCopyApiKey = () => {
-    navigator.clipboard.writeText(apiKey);
-    setCopiedKey(true);
-    setTimeout(() => setCopiedKey(false), 2000);
-  };
-
-  const handleGenerateNewKey = () => {
-    const randomChars = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    setApiKey(`sk_inv_live_${randomChars}`);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
-  };
-
-  const applyPromo = () => {
-    if (promoCode.trim().toLowerCase() === "free") {
-      setPromoApplied(true);
-      setError(null);
-    } else {
-      setError(language === "ka" ? "არასწორი პრომო კოდი" : "Invalid promo code");
     }
   };
 
@@ -327,7 +282,9 @@ export default function SettingsMockup({
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-xs font-black uppercase text-slate-800">Single Plan</span>
-                      <span className="ml-2 text-[10px] text-slate-400 font-bold">$19 / {language === "ka" ? "თვეში" : "mo"}</span>
+                      <span className="ml-2 text-[10px] text-slate-400 font-bold">
+                        {language === "ka" ? `${PRICING.single.GEL} ₾` : `$${PRICING.single.USD}`} / {language === "ka" ? "თვეში" : "mo"}
+                      </span>
                     </div>
                     {localPlan === "single" && <Check className="w-4 h-4 text-indigo-600" />}
                   </div>
@@ -352,7 +309,7 @@ export default function SettingsMockup({
                     <div>
                       <span className="text-xs font-black uppercase text-slate-800">Multi-Entity / Corporate Plan</span>
                       <span className="ml-2 text-[10px] text-indigo-600 font-black">
-                        {promoApplied ? "$0" : "$49"} / {language === "ka" ? "თვეში" : "mo"}
+                        {language === "ka" ? `${PRICING.multi.GEL} ₾` : `$${PRICING.multi.USD}`} / {language === "ka" ? "თვეში" : "mo"}
                       </span>
                     </div>
                     {localPlan === "multi" && <Check className="w-4 h-4 text-indigo-600" />}
@@ -362,65 +319,16 @@ export default function SettingsMockup({
                       ? "მრავალჯერადი სამუშაო სივრცეები, თანამშრომლების როლების სიმულატორი, ვალუტის კურსების ავტომატური კონვერტაცია და ექსპორტი." 
                       : "Multiple isolated entities/workspaces, team role simulator, real-time exchange rates, and premium reports."}
                   </p>
-                  {promoApplied && (
-                    <span className="absolute top-4 right-10 bg-emerald-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
-                      {language === "ka" ? "უფასო" : "Promo Active"}
-                    </span>
-                  )}
                 </button>
               </div>
 
-              {/* Promo Code Fields */}
-              <div className="pt-2">
-                <label className="text-xs font-bold text-slate-500 block mb-1">
-                  {language === "ka" ? "პრომო კოდი" : "Have a Promo Code?"}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder={language === "ka" ? "მაგ. FREE" : "e.g. FREE"}
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    disabled={promoApplied}
-                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={applyPromo}
-                    disabled={promoApplied || !promoCode}
-                    className="px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 disabled:bg-slate-200 rounded-xl text-xs font-bold cursor-pointer"
-                  >
-                    {promoApplied ? (language === "ka" ? "აქტიურია" : "Applied") : (language === "ka" ? "გამოყენება" : "Apply")}
-                  </button>
-                </div>
-              </div>
-
-              {/* Mock Invoice billing logs */}
+              {/* Billing History */}
               <div className="pt-4 border-t border-slate-100 space-y-2">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                  {language === "ka" ? "ბილინგის ისტორია" : "Recent Billing Invoices"}
+                  {language === "ka" ? "ბილინგის ისტორია" : "Billing History"}
                 </h4>
-                <div className="bg-slate-50/50 border border-slate-100 rounded-2xl divide-y divide-slate-100 overflow-hidden">
-                  <div className="p-3 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <p className="font-bold text-slate-700">INV-2026-003</p>
-                        <p className="text-[10px] text-slate-400">July 01, 2026</p>
-                      </div>
-                    </div>
-                    <span className="font-bold text-slate-700">$19.00</span>
-                  </div>
-                  <div className="p-3 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <p className="font-bold text-slate-700">INV-2026-002</p>
-                        <p className="text-[10px] text-slate-400">June 01, 2026</p>
-                      </div>
-                    </div>
-                    <span className="font-bold text-slate-700">$19.00</span>
-                  </div>
+                <div className="p-6 text-center text-xs text-slate-400 font-bold bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                  {language === "ka" ? "გადახდების ისტორია ჯერ არ არის." : "No payment history yet."}
                 </div>
               </div>
             </div>
@@ -448,8 +356,9 @@ export default function SettingsMockup({
                     <input
                       type={showPasswords ? "text" : "password"}
                       value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none"
+                      disabled
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none cursor-not-allowed text-slate-400"
                     />
                   </div>
                   <div className="space-y-1">
@@ -459,8 +368,9 @@ export default function SettingsMockup({
                     <input
                       type={showPasswords ? "text" : "password"}
                       value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none"
+                      disabled
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none cursor-not-allowed text-slate-400"
                     />
                   </div>
                   <div className="space-y-1 sm:col-span-2">
@@ -470,74 +380,39 @@ export default function SettingsMockup({
                     <input
                       type={showPasswords ? "text" : "password"}
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none"
+                      disabled
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none cursor-not-allowed text-slate-400"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswords(!showPasswords)}
-                    className="text-[10px] text-slate-500 hover:text-indigo-600 font-bold flex items-center gap-1 cursor-pointer"
-                  >
-                    {showPasswords ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    <span>
-                      {showPasswords 
-                        ? (language === "ka" ? "დამალვა" : "Hide Passwords") 
-                        : (language === "ka" ? "ჩვენება" : "Reveal Passwords")}
-                    </span>
-                  </button>
-                </div>
+                <p className="text-xs font-semibold text-slate-400 pt-1">
+                  {language === "ka" ? "პაროლის შეცვლა მალე დაემატება." : "Password change coming soon."}
+                </p>
               </div>
 
-              {/* Developer API Keys */}
-              <div className="space-y-3 bg-slate-50/40 p-4 rounded-2xl border border-slate-100">
-                <h4 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <Key className="w-4 h-4 text-indigo-500" />
-                  {language === "ka" ? "დეველოპერის API გასაღები" : "Developer API Token"}
-                </h4>
-                <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
-                  {language === "ka" 
-                    ? "გამოიყენეთ ეს ტოკენი ინვოისების ავტომატური ატვირთვისა და ინტეგრაციებისთვის." 
-                    : "Use this secure key to automatically upload invoice documents via CLI scripts or external applications."}
-                </p>
-
-                <div className="flex items-center gap-2 pt-1">
-                  <div className="flex-1 relative">
-                    <input
-                      type={apiKeyVisible ? "text" : "password"}
-                      value={apiKey}
-                      readOnly
-                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setApiKeyVisible(!apiKeyVisible)}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-indigo-600"
-                    >
-                      {apiKeyVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+              {/* API Access Card */}
+              <div className="p-4 bg-slate-50/40 rounded-2xl border border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <Key className="w-4 h-4" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyApiKey}
-                    className="p-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-xl transition-all shadow-sm cursor-pointer"
-                    title={language === "ka" ? "კოპირება" : "Copy key"}
-                  >
-                    {copiedKey ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-
-                <div className="flex justify-end pt-1">
-                  <button
-                    type="button"
-                    onClick={handleGenerateNewKey}
-                    className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer"
-                  >
-                    {language === "ka" ? "ახალი ტოკენის გენერირება" : "Generate New Token"}
-                  </button>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-bold text-slate-700">
+                        {language === "ka" ? "API წვდომა" : "API Access"}
+                      </h4>
+                      <span className="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[9px] font-bold uppercase">
+                        {language === "ka" ? "მალე" : "Coming Soon"}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-semibold leading-relaxed mt-0.5">
+                      {language === "ka" 
+                        ? "ინვოისების ავტომატური ატვირთვის API ტოკენი მალე დაემატება." 
+                        : "Developer API token and endpoints will be available soon."}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -546,9 +421,14 @@ export default function SettingsMockup({
                 <div className="flex items-start gap-2.5">
                   <Smartphone className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-xs font-bold text-slate-700">
-                      {language === "ka" ? "ორფაქტორიანი ავტორიზაცია (2FA)" : "Two-Factor Authentication (2FA)"}
-                    </h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-bold text-slate-700">
+                        {language === "ka" ? "ორფაქტორიანი ავტორიზაცია (2FA)" : "Two-Factor Authentication (2FA)"}
+                      </h4>
+                      <span className="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[9px] font-bold uppercase">
+                        {language === "ka" ? "მალე" : "Soon"}
+                      </span>
+                    </div>
                     <p className="text-[10px] text-slate-400 font-semibold leading-relaxed mt-0.5">
                       {language === "ka" 
                         ? "დამატებითი უსაფრთხოების ფენა თქვენი ანგარიშის დასაცავად." 
@@ -559,14 +439,10 @@ export default function SettingsMockup({
 
                 <button
                   type="button"
-                  onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
-                  className={`w-11 h-6 rounded-full p-1 transition-all duration-200 ease-in-out cursor-pointer ${
-                    twoFactorEnabled ? "bg-indigo-600" : "bg-slate-200"
-                  }`}
+                  disabled
+                  className="w-11 h-6 rounded-full p-1 bg-slate-200 opacity-60 cursor-not-allowed"
                 >
-                  <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200 ease-in-out ${
-                    twoFactorEnabled ? "translate-x-5" : "translate-x-0"
-                  }`} />
+                  <div className="w-4 h-4 rounded-full bg-white shadow-sm translate-x-0" />
                 </button>
               </div>
 

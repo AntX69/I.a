@@ -24,7 +24,11 @@ export default function InvoiceDetailModal({
   const [amount, setAmount] = useState(invoice.amount);
   const [currency, setCurrency] = useState(invoice.currency);
   const [category, setCategory] = useState<ExpenseCategory>(invoice.category);
+  const [vatMode, setVatMode] = useState<"included" | "none" | "unknown">(invoice.vatMode || "unknown");
   const [items, setItems] = useState<InvoiceItem[]>([...invoice.items]);
+
+  const net = Math.round((Number(amount) / 1.18) * 100) / 100;
+  const vat = Math.round((Number(amount) - net) * 100) / 100;
 
   const handleSave = () => {
     onSave({
@@ -34,6 +38,7 @@ export default function InvoiceDetailModal({
       amount: Number(amount),
       currency: currency.toUpperCase(),
       category,
+      vatMode,
       items: items.filter(i => i.name.trim() !== ""),
     });
     setIsEditing(false);
@@ -205,6 +210,38 @@ export default function InvoiceDetailModal({
                   </span>
                 )}
               </div>
+
+              {/* VAT Mode */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                  {language === "ka" ? "დღგ-ის სტატუსი" : "VAT Status"}
+                </label>
+                {isEditing ? (
+                  <select
+                    value={vatMode}
+                    onChange={(e) => setVatMode(e.target.value as "included" | "none" | "unknown")}
+                    className="w-full px-3 py-2 border border-slate-200/80 bg-white/50 backdrop-blur-sm rounded-xl text-sm focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="included">
+                      {language === "ka" ? "დღგ შედის თანხაში (18%)" : "VAT included in total (18%)"}
+                    </option>
+                    <option value="none">
+                      {language === "ka" ? "დღგ არ ვრცელდება" : "VAT not applicable"}
+                    </option>
+                    <option value="unknown">
+                      {language === "ka" ? "უცნობია" : "Unknown"}
+                    </option>
+                  </select>
+                ) : (
+                  <p className="text-sm font-semibold text-slate-800 bg-white/40 backdrop-blur-sm px-3 py-2 rounded-xl border border-slate-200/30">
+                    {vatMode === "included"
+                      ? (language === "ka" ? "დღგ შედის თანხაში (18%)" : "VAT included in total (18%)")
+                      : vatMode === "none"
+                      ? (language === "ka" ? "დღგ არ ვრცელდება" : "VAT not applicable")
+                      : (language === "ka" ? "უცნობია" : "Unknown")}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Product Items Table */}
@@ -311,11 +348,6 @@ export default function InvoiceDetailModal({
 
             {/* Thermal Receipt Paper Mock */}
             <div id="thermal-receipt-print-area" className="relative w-full max-w-sm bg-[#FAF9F6] border border-slate-200 rounded-lg shadow-md p-6 text-slate-800 font-mono text-sm leading-relaxed overflow-hidden">
-              
-              {/* Authenticated Ink Watermark Stamp */}
-              <div className="absolute right-4 top-4 border-2 border-dashed border-indigo-500/40 text-indigo-500/40 rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-widest rotate-12 pointer-events-none select-none uppercase">
-                {language === "ka" ? "შემოწმებულია" : "Verified Doc"}
-              </div>
 
               {/* Receipt Header */}
               <div className="text-center space-y-1 mb-4">
@@ -323,16 +355,12 @@ export default function InvoiceDetailModal({
                   {vendor || "COMPANY UNNAMED"}
                 </h3>
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">
-                  --- {language === "ka" ? "ციფრული ქვითარი" : "DIGITAL RECEIPT"} ---
+                  --- {language === "ka" ? "ამონაწერი — არ არის ფისკალური ქვითარი" : "EXTRACT — NOT A FISCAL RECEIPT"} ---
                 </p>
                 <div className="text-[10px] text-slate-500 space-y-0.5 mt-2">
                   <p className="flex justify-between">
                     <span>{language === "ka" ? "თარიღი:" : "DATE:"}</span>
                     <span className="font-bold">{date || "YYYY-MM-DD"}</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>{language === "ka" ? "ID:" : "RECEIPT ID:"}</span>
-                    <span className="font-bold">#{invoice.id.toUpperCase()}</span>
                   </p>
                   <p className="flex justify-between">
                     <span>{language === "ka" ? "კატეგორია:" : "CATEGORY:"}</span>
@@ -383,14 +411,18 @@ export default function InvoiceDetailModal({
 
               {/* Receipt Totals */}
               <div className="space-y-1.5 text-xs text-slate-800">
-                <div className="flex justify-between">
-                  <span className="font-medium text-slate-500">{language === "ka" ? "შუალედური ჯამი:" : "SUBTOTAL:"}</span>
-                  <span className="font-bold">{(amount * 0.82).toFixed(2)} {currency}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-slate-500">{language === "ka" ? "დღგ (18%):" : "VAT / TAX (18%):"}</span>
-                  <span className="font-bold">{(amount * 0.18).toFixed(2)} {currency}</span>
-                </div>
+                {vatMode === "included" && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-slate-500">{language === "ka" ? "შუალედური ჯამი:" : "SUBTOTAL:"}</span>
+                      <span className="font-bold">{net.toFixed(2)} {currency}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-slate-500">{language === "ka" ? "დღგ (18%):" : "VAT / TAX (18%):"}</span>
+                      <span className="font-bold">{vat.toFixed(2)} {currency}</span>
+                    </div>
+                  </>
+                )}
                 
                 {/* Thick separator */}
                 <div className="border-b-2 border-double border-slate-400 my-2" />
@@ -403,22 +435,8 @@ export default function InvoiceDetailModal({
                 </div>
               </div>
 
-              {/* Decorative printed barcode */}
-              <div className="flex flex-col items-center justify-center mt-6 pt-5 border-t border-dashed border-slate-300">
-                <div className="flex items-end h-8 gap-[1.5px] mb-1">
-                  {[2, 1, 3, 1, 4, 2, 1, 3, 2, 1, 4, 1, 2, 3, 1, 2, 1, 4, 2, 1, 3].map((w, i) => (
-                    <div
-                      key={i}
-                      className="bg-slate-800 h-full rounded-[0.5px]"
-                      style={{ width: `${w}px` }}
-                    />
-                  ))}
-                </div>
-                <span className="text-[9px] font-mono tracking-[0.25em] text-slate-400">DOC-{invoice.id.toUpperCase()}</span>
-              </div>
-
               {/* Receipt Footer Message */}
-              <div className="text-center text-[9px] text-slate-400 mt-4 font-bold tracking-wider">
+              <div className="text-center text-[9px] text-slate-400 mt-6 pt-4 border-t border-dashed border-slate-300 font-bold tracking-wider">
                 *** {language === "ka" ? "გმადლობთ თანამშრომლობისთვის" : "THANK YOU FOR YOUR BUSINESS"} ***
               </div>
 
@@ -480,6 +498,7 @@ export default function InvoiceDetailModal({
                     setAmount(invoice.amount);
                     setCurrency(invoice.currency);
                     setCategory(invoice.category);
+                    setVatMode(invoice.vatMode || "unknown");
                     setItems([...invoice.items]);
                     setIsEditing(false);
                   }}

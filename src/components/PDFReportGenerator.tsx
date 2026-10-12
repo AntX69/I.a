@@ -1,5 +1,5 @@
 import React from "react";
-import { FileText, Printer, Download, Check, ShieldCheck, X } from "lucide-react";
+import { FileText, Printer, Download, Check, X } from "lucide-react";
 import { Language, ExtractedInvoice, ExpenseCategory, CATEGORY_LABELS, TRANSLATIONS } from "../types";
 
 interface PDFReportGeneratorProps {
@@ -119,20 +119,16 @@ export default function PDFReportGenerator({
                 {TRANSLATIONS[language].title}
               </h1>
               <p className="text-xs font-mono text-indigo-600 font-extrabold uppercase tracking-widest mt-1">
-                {language === "ka" ? "ავტომატიზებული ფინანსური რეესტრი და აუდიტი" : "AUTOMATED FINANCIAL LEDGER & AUDIT"}
+                {language === "ka" ? "ავტომატიზებული ფინანსური რეესტრი" : "AUTOMATED FINANCIAL LEDGER"}
               </p>
               <div className="mt-4 text-xs font-bold text-slate-700 space-y-1">
                 <div><span className="text-slate-400">{language === "ka" ? "სამუშაო სივრცე:" : "WORKSPACE:"}</span> {workspace}</div>
                 <div><span className="text-slate-400">{language === "ka" ? "თარიღი:" : "DATE:"}</span> {new Date().toLocaleDateString()}</div>
-                <div><span className="text-slate-400">{language === "ka" ? "სტატუსი:" : "STATUS:"}</span> <span className="text-emerald-600 font-black">✔ {language === "ka" ? "დამოწმებულია" : "AUDITED & VERIFIED"}</span></div>
+                <div><span className="text-slate-400">{language === "ka" ? "სტატუსი:" : "STATUS:"}</span> <span className="text-amber-600 font-bold">{language === "ka" ? "AI-ით დამუშავებული — გადაამოწმეთ ორიგინალთან" : "AI-processed — verify against originals"}</span></div>
               </div>
             </div>
 
             <div className="text-right">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                SECURE RECORD
-              </div>
               <p className="text-[10px] text-slate-400 mt-2 font-mono">ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}</p>
             </div>
           </div>
@@ -149,7 +145,7 @@ export default function PDFReportGenerator({
             </div>
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                {language === "ka" ? "დოკუმენტების რაოდენობა" : "AUDITED DOCUMENTS"}
+                {language === "ka" ? "დოკუმენტები" : "DOCUMENTS"}
               </div>
               <div className="text-lg font-black text-slate-900 mt-1">
                 {totalInvoices} {language === "ka" ? "ჩანაწერი" : "Logs"}

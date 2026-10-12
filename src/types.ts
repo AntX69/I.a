@@ -18,6 +18,8 @@ export interface ExtractedInvoice {
   category: ExpenseCategory;
   fileName: string;
   uploadedAt: string;
+  workspace?: string;
+  vatMode?: "included" | "none" | "unknown";
 }
 
 export type UserRole = "admin" | "accountant" | "purchaser" | "member";

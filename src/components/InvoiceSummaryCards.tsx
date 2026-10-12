@@ -100,7 +100,9 @@ export default function InvoiceSummaryCards({
             {t.byCategory}
           </p>
           {totalInvoices === 0 ? (
-            <p className="text-sm text-slate-400 italic">No category data</p>
+            <p className="text-sm text-slate-400 italic">
+              {language === "ka" ? "კატეგორიების მონაცემები ჯერ არ არის" : "No category data"}
+            </p>
           ) : (
             <div className="grid grid-cols-2 gap-1.5 text-xs">
               {Object.entries(categoryCounts)

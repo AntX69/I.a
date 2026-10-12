@@ -17,6 +17,7 @@ export default function ManualInvoiceModal({
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [currency, setCurrency] = useState("GEL");
   const [category, setCategory] = useState<ExpenseCategory>("office");
+  const [vatMode, setVatMode] = useState<"included" | "none" | "unknown">("unknown");
   
   // Invoice items state
   const [items, setItems] = useState<{ name: string; quantity: number; price: number }[]>([
@@ -82,6 +83,7 @@ export default function ManualInvoiceModal({
         price: item.price
       })),
       category: category,
+      vatMode: vatMode,
       fileName: language === "ka" ? "მექანიკური_შექმნილი.pdf" : "manually_created.pdf",
       uploadedAt: new Date().toISOString()
     };
@@ -190,6 +192,28 @@ export default function ManualInvoiceModal({
                 <option value="EUR">EUR (€)</option>
               </select>
             </div>
+          </div>
+
+          {/* VAT Mode */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              {language === "ka" ? "დღგ-ის სტატუსი" : "VAT Status"}
+            </label>
+            <select
+              value={vatMode}
+              onChange={(e) => setVatMode(e.target.value as "included" | "none" | "unknown")}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-semibold bg-white cursor-pointer"
+            >
+              <option value="included">
+                {language === "ka" ? "დღგ შედის თანხაში (18%)" : "VAT included in total (18%)"}
+              </option>
+              <option value="none">
+                {language === "ka" ? "დღგ არ ვრცელდება" : "VAT not applicable"}
+              </option>
+              <option value="unknown">
+                {language === "ka" ? "უცნობია" : "Unknown"}
+              </option>
+            </select>
           </div>
 
           {/* Items Section */}
