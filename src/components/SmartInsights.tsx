@@ -174,7 +174,7 @@ export default function SmartInsights({
   }
 
   return (
-    <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-2xl border border-slate-800/80 mb-8 relative overflow-hidden">
+    <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-2xl border border-slate-800/80 mb-8 relative overflow-hidden">
       {/* Decorative gradient glowing orb */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-rose-600/10 rounded-full blur-2xl pointer-events-none" />
@@ -189,12 +189,12 @@ export default function SmartInsights({
             <h3 className="font-extrabold text-white text-base">
               {language === "ka" ? "სმარტ-ანალიტიკა & ფინანსური რჩევები" : "AI Financial Intelligence & Insights"}
             </h3>
-            <p className="text-[10px] text-slate-400 font-medium">
+            <p className="text-xs text-slate-400 font-medium">
               {language === "ka" ? "ავტომატური რეკომენდაციები დანახარჯების ოპტიმიზაციისთვის" : "Automated optimization strategies based on spending logs"}
             </p>
           </div>
         </div>
-        <span className="text-[9px] font-mono tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full uppercase">
+        <span className="text-xs font-mono tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full uppercase">
           {language === "ka" ? "პრემიუმ ვერსია" : "Premium Engine"}
         </span>
       </div>
@@ -229,7 +229,7 @@ export default function SmartInsights({
                 <h4 className="text-xs font-black text-slate-200 group-hover:text-white transition-colors">
                   {ins.title}
                 </h4>
-                <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                <p className="text-xs text-slate-400 leading-relaxed font-medium">
                   {ins.description}
                 </p>
               </div>

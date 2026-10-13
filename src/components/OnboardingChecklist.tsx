@@ -187,7 +187,7 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
               ? `პირველი ნაბიჯები: ${completedCount}/${totalSteps} — გაგრძელება`
               : `Getting Started: ${completedCount}/${totalSteps} — Continue`}
           </span>
-          <span className="hidden sm:inline-block text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
+          <span className="hidden sm:inline-block text-xs font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
             {progressPercent}%
           </span>
         </div>
@@ -214,7 +214,7 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
   if (showCelebration) {
     return (
       <div 
-        className={`w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-3xl p-6 shadow-xl shadow-emerald-500/20 border border-emerald-400/30 transition-all duration-500 transform ${
+        className={`w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl p-6 shadow-xl shadow-emerald-500/20 border border-emerald-400/30 transition-all duration-500 transform ${
           isHidingAfterCelebration ? "opacity-0 scale-95 -translate-y-2" : "opacity-100 scale-100 translate-y-0"
         } animate-fadeIn`}
       >
@@ -244,7 +244,7 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
   }
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900/90 border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl shadow-indigo-500/5 dark:shadow-none backdrop-blur-md relative overflow-hidden animate-fadeIn transition-all duration-300">
+    <div className="w-full bg-white dark:bg-slate-900/90 border border-indigo-100/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl shadow-indigo-500/5 dark:shadow-none backdrop-blur-md relative overflow-hidden animate-fadeIn transition-all duration-300">
       {/* Background Accent Glow */}
       <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -252,7 +252,7 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50">
               <Sparkles className="w-3 h-3" />
               <span>{language === "ka" ? "პირველი ნაბიჯები" : "Onboarding"}</span>
             </span>
@@ -279,7 +279,7 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
 
       {/* Progress Bar */}
       <div className="space-y-1.5 mb-5">
-        <div className="flex justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
           <span>{language === "ka" ? "პროგრესი" : "Overall Progress"}</span>
           <span className="font-mono text-indigo-600 dark:text-indigo-400 font-extrabold">{progressPercent}%</span>
         </div>
@@ -336,14 +336,14 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
                       {language === "ka" ? step.titleKa : step.titleEn}
                     </h4>
                   </div>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium line-clamp-2 mt-1 leading-snug">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium line-clamp-2 mt-1 leading-snug">
                     {language === "ka" ? step.descKa : step.descEn}
                   </p>
                 </div>
               </div>
 
               {/* Action / Status Link */}
-              <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold">
+              <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold">
                 {isDone ? (
                   <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-extrabold">
                     <Check className="w-3 h-3" />

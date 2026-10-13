@@ -96,7 +96,7 @@ export default function RoleSimulator({
   const isOwner = activeRole === "admin";
 
   return (
-    <div className="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm mb-8 space-y-6">
+    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm mb-8 space-y-6">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
         <div className="flex items-center gap-2.5">
@@ -107,7 +107,7 @@ export default function RoleSimulator({
             <h4 className="text-sm font-black text-slate-800">
               {language === "ka" ? "თანამშრომლების როლები & წვდომის მართვა" : "Enterprise Roles & Access Management"}
             </h4>
-            <p className="text-[10px] text-slate-400 font-semibold">
+            <p className="text-xs text-slate-400 font-semibold">
               {language === "ka" 
                 ? "მფლობელის კონტროლი: დააყენეთ ლიმიტები და გაუზიარეთ ჩაკეტილი როლის ლინკი თანამშრომლებს" 
                 : "Owner Cockpit: Setup restrictions and share pre-locked direct links with employees"}
@@ -115,7 +115,7 @@ export default function RoleSimulator({
           </div>
         </div>
         <div className="flex items-center gap-1.5 self-start sm:self-center">
-          <span className="text-[10px] font-mono tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full uppercase font-bold flex items-center gap-1">
+          <span className="text-xs font-mono tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full uppercase font-bold flex items-center gap-1">
             <Sliders className="w-3 h-3 text-indigo-500" />
             {language === "ka" ? "ინტერაქტიული პანელი" : "Interactive Control"}
           </span>
@@ -126,7 +126,7 @@ export default function RoleSimulator({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Selector Panel */}
         <div className="md:col-span-1 space-y-2.5">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+          <div className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">
             {language === "ka" ? "1. აირჩიეთ როლი გამოსაცდელად" : "1. Select role to simulate"}
           </div>
           {Object.entries(rolesMetadata).map(([roleKey, value]) => {
@@ -145,7 +145,7 @@ export default function RoleSimulator({
                   <div className="text-xs font-black uppercase tracking-wider truncate">
                     {language === "ka" ? value.titleKa : value.titleEn}
                   </div>
-                  <p className={`text-[10px] leading-snug line-clamp-2 ${isSelected ? "text-slate-300" : "text-slate-400 group-hover:text-slate-500"}`}>
+                  <p className={`text-xs leading-snug line-clamp-2 ${isSelected ? "text-slate-300" : "text-slate-400 group-hover:text-slate-500"}`}>
                     {language === "ka" ? value.descKa : value.descEn}
                   </p>
                 </div>
@@ -163,7 +163,7 @@ export default function RoleSimulator({
         <div className="md:col-span-2 bg-slate-50 border border-slate-100 p-5 rounded-2xl flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-4 border-b border-slate-200/50 gap-2">
-              <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                 <Shield className="w-4 h-4 text-indigo-500" />
                 {language === "ka" 
                   ? `წვდომის უფლებები: ${rolesMetadata[activeRole].titleKa}` 
@@ -171,11 +171,11 @@ export default function RoleSimulator({
               </h5>
               
               {isOwner ? (
-                <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded-md uppercase shrink-0">
+                <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2.5 py-0.5 rounded-full uppercase shrink-0">
                   {language === "ka" ? "რედაქტირებადი (მფლობელი)" : "Editable (Owner Mode)"}
                 </span>
               ) : (
-                <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 font-bold px-2 py-0.5 rounded-md uppercase shrink-0 flex items-center gap-1">
+                <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 font-bold px-2.5 py-0.5 rounded-full uppercase shrink-0 flex items-center gap-1">
                   <Lock className="w-2.5 h-2.5" />
                   {language === "ka" ? "მხოლოდ კითხვადი" : "Read-Only"}
                 </span>
@@ -235,7 +235,7 @@ export default function RoleSimulator({
             </div>
           </div>
 
-          <div className="mt-5 pt-3.5 border-t border-slate-200/60 flex items-center gap-2.5 text-[10px] text-slate-500 font-bold">
+          <div className="mt-5 pt-3.5 border-t border-slate-200/60 flex items-center gap-2.5 text-xs text-slate-500 font-bold">
             <Info className="w-4 h-4 text-indigo-500 shrink-0" />
             <span>
               {isOwner ? (
@@ -262,7 +262,7 @@ export default function RoleSimulator({
             <h5 className="text-xs font-black uppercase tracking-wider">
               {language === "ka" ? "თანამშრომლის მოსაწვევი ჩაკეტილი ბმულები" : "Employee Locked-Role Invite Links"}
             </h5>
-            <p className="text-[10px] text-slate-400 font-semibold">
+            <p className="text-xs text-slate-400 font-semibold">
               {language === "ka" 
                 ? "როგორ მივცეთ როლები თანამშრომლებს ისე, რომ მათ ვერ შეძლონ როლის შეცვლა თვითნებურად?" 
                 : "How to assign roles so employees can't change them on their own?"}
@@ -270,7 +270,7 @@ export default function RoleSimulator({
           </div>
         </div>
 
-        <p className="text-[11px] text-slate-300 leading-relaxed">
+        <p className="text-xs text-slate-300 leading-relaxed">
           {language === "ka" 
             ? "გაუგზავნეთ თქვენს თანამშრომლებს შესაბამისი ბმული. როდესაც ისინი გახსნიან ამ ბმულს, აპლიკაცია ჩაიკეტება მათთვის მითითებულ როლზე, ხოლო როლების შესაცვლელი ეს პანელი საერთოდ დაიმალება მათი ეკრანიდან!"
             : "Simply copy and send these links to your employees. When they open the link, the app automatically locks to that role and hides this configuration panel entirely from their view!"}
@@ -280,10 +280,10 @@ export default function RoleSimulator({
           {/* Accountant Invite Link */}
           <div className="bg-slate-850 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between gap-3">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300 block mb-1">
+              <span className="text-xs font-black uppercase tracking-wider text-indigo-300 block mb-1">
                 {language === "ka" ? "ბუღალტრის ბმული" : "Accountant Link"}
               </span>
-              <p className="text-[10px] text-slate-400 leading-snug">
+              <p className="text-xs text-slate-400 leading-snug">
                 {language === "ka" 
                   ? "ხსნის ბუღალტრის ხედს, რომელიც ექვემდებარება თქვენს მიერ ზემოთ მითითებულ უფლებებს."
                   : "Opens the accountant ledger with real-time controls subject to your specified permissions."}
@@ -291,7 +291,7 @@ export default function RoleSimulator({
             </div>
             <button
               onClick={() => handleCopyLink("accountant")}
-              className={`w-full py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`w-full py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 copiedRole === "accountant"
                   ? "bg-emerald-600 text-white"
                   : "bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -314,10 +314,10 @@ export default function RoleSimulator({
           {/* Purchaser Invite Link */}
           <div className="bg-slate-850 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between gap-3">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300 block mb-1">
+              <span className="text-xs font-black uppercase tracking-wider text-indigo-300 block mb-1">
                 {language === "ka" ? "შესყიდვების მენეჯერის ბმული" : "Purchaser Link"}
               </span>
-              <p className="text-[10px] text-slate-400 leading-snug">
+              <p className="text-xs text-slate-400 leading-snug">
                 {language === "ka" 
                   ? "მხოლოდ ინვოისების ასატვირთად. არ აჩვენებს ანალიტიკას და ბიუჯეტებს, თუ ზემოთ არ ჩაურთავთ."
                   : "Optimized for quick uploads only. Hides analytics and logs unless allowed by you."}
@@ -325,7 +325,7 @@ export default function RoleSimulator({
             </div>
             <button
               onClick={() => handleCopyLink("purchaser")}
-              className={`w-full py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`w-full py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 copiedRole === "purchaser"
                   ? "bg-emerald-600 text-white"
                   : "bg-indigo-600 hover:bg-indigo-700 text-white"

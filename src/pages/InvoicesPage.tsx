@@ -23,6 +23,7 @@ import {
   TRANSLATIONS 
 } from "../types";
 import InvoiceUploadZone from "../components/InvoiceUploadZone";
+import PageHeader from "../components/PageHeader";
 
 export interface InvoicesPageProps {
   language: Language;
@@ -98,11 +99,34 @@ export default function InvoicesPage({
 
   return (
     <div className="space-y-6 animate-fadeIn">
+      {/* Page Header Component */}
+      <PageHeader
+        title={language === "ka" ? "ინვოისები და დოკუმენტები" : "Invoices & Documents"}
+        subtitle={language === "ka" ? "მართეთ, გაფილტრეთ და ექსპორტი გაუკეთეთ თქვენს ფინანსურ დოკუმენტებს" : "Manage, filter and export your company financial records"}
+        badge={
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800">
+            {workspaceInvoices.length} {language === "ka" ? "დოკუმენტი" : "documents"}
+          </span>
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onAddManual}
+              className="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{language === "ka" ? "ხელით დამატება" : "Add Manually"}</span>
+            </button>
+          </div>
+        }
+      />
+
       {/* Upload Section (Collapsible / Accordion) */}
       <div 
         ref={uploadSectionRef}
         id="upload-zone-container" 
-        className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-3xl p-5 shadow-sm transition-all"
+        className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -140,7 +164,7 @@ export default function InvoicesPage({
                 isAnalyzing={isAnalyzing}
               />
             ) : (
-              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-3xl p-8 text-center text-slate-500 shadow-sm flex flex-col items-center justify-center space-y-3.5 animate-fadeIn">
+              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 text-center text-slate-500 shadow-sm flex flex-col items-center justify-center space-y-3.5 animate-fadeIn">
                 <div className="p-3.5 bg-rose-50 dark:bg-rose-950/50 text-rose-500 rounded-2xl border border-rose-100 dark:border-rose-900">
                   <Lock className="w-6 h-6" />
                 </div>
@@ -148,7 +172,7 @@ export default function InvoicesPage({
                   <p className="text-sm font-black text-slate-700 dark:text-slate-200">
                     {language === "ka" ? "დოკუმენტების ატვირთვა შეზღუდულია" : "Document Uploading Restricted"}
                   </p>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold max-w-sm mt-1 mx-auto leading-normal">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold max-w-sm mt-1 mx-auto leading-normal">
                     {language === "ka" 
                       ? "მფლობელმა ამ როლისთვის გამორთო ინვოისების/ჩეკების ატვირთვის ფუნქცია." 
                       : "The owner has locked document upload privileges for this role."}
@@ -171,7 +195,7 @@ export default function InvoicesPage({
       </div>
 
       {/* Main Table Container */}
-      <div id="invoices-table-section" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none overflow-hidden flex flex-col">
+      <div id="invoices-table-section" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xl shadow-slate-200/40 dark:shadow-none overflow-hidden flex flex-col">
         {/* Controls Bar */}
         <div className="p-5 border-b border-slate-200/40 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-850/40 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
           {/* Left: Search & Filters */}
@@ -276,7 +300,7 @@ export default function InvoicesPage({
                     }}
                     className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50/50 dark:hover:bg-slate-800 hover:text-indigo-600 transition-colors flex items-center gap-2.5 cursor-pointer"
                   >
-                    <span className="text-[9px] bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded font-extrabold uppercase">CSV</span>
+                    <span className="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded font-extrabold uppercase">CSV</span>
                     {t.exportCsv}
                   </button>
                   <button
@@ -286,7 +310,7 @@ export default function InvoicesPage({
                     }}
                     className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50/80 dark:hover:bg-slate-800 hover:text-emerald-700 transition-colors flex items-center gap-2.5 cursor-pointer"
                   >
-                    <span className="text-[9px] bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded font-extrabold uppercase">XLS</span>
+                    <span className="text-xs bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded font-extrabold uppercase">XLS</span>
                     {t.exportExcel}
                   </button>
                   <button
@@ -296,7 +320,7 @@ export default function InvoicesPage({
                     }}
                     className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50/80 dark:hover:bg-slate-800 hover:text-rose-700 transition-colors flex items-center gap-2.5 cursor-pointer"
                   >
-                    <span className="text-[9px] bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded font-extrabold uppercase">PDF</span>
+                    <span className="text-xs bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded font-extrabold uppercase">PDF</span>
                     {language === "ka" ? "ბრენდირებული PDF რეპორტი" : "Branded PDF Report"}
                   </button>
                 </div>
@@ -410,11 +434,11 @@ export default function InvoicesPage({
                       {/* Category Badge */}
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1 items-start">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${categoryColor}`}>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider border ${categoryColor}`}>
                             {language === "ka" ? categoryLabel.ka : categoryLabel.en}
                           </span>
                           {isInvoiceOverBudget(inv.category, inv.currency) && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 border border-red-200/50 dark:border-red-900 rounded-md px-1.5 py-0.5 uppercase tracking-wider animate-pulse">
+                            <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 border border-red-200/50 dark:border-red-900 rounded-md px-1.5 py-0.5 uppercase tracking-wider animate-pulse">
                               <AlertCircle className="w-2.5 h-2.5 shrink-0" />
                               <span>{language === "ka" ? "ლიმიტს გარეთ" : "Over Budget"}</span>
                             </span>
@@ -430,7 +454,7 @@ export default function InvoicesPage({
                             : "-"}
                         </div>
                         {inv.items.length > 1 && (
-                          <span className="inline-flex mt-1 text-[10px] font-bold bg-white/60 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-lg border border-slate-200/40 dark:border-slate-700">
+                          <span className="inline-flex mt-1 text-xs font-bold bg-white/60 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-lg border border-slate-200/40 dark:border-slate-700">
                             +{inv.items.length - 1} {language === "ka" ? "სხვა" : "more"}
                           </span>
                         )}
@@ -476,7 +500,7 @@ export default function InvoicesPage({
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center max-w-md mx-auto">
-                      <div className="p-4 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-3xl mb-4 shadow-sm border border-indigo-100/40 dark:border-indigo-900">
+                      <div className="p-4 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-2xl mb-4 shadow-sm border border-indigo-100/40 dark:border-indigo-900">
                         <FileText className="w-10 h-10" />
                       </div>
                       <h3 className="font-extrabold text-slate-950 dark:text-white text-lg tracking-tight">
@@ -533,7 +557,7 @@ export default function InvoicesPage({
             ))
           ) : filteredInvoices.length === 0 ? (
             <div className="py-12 text-center">
-              <div className="p-4 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-3xl mx-auto w-fit mb-4 shadow-sm border border-indigo-100/40 dark:border-indigo-900">
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-2xl mx-auto w-fit mb-4 shadow-sm border border-indigo-100/40 dark:border-indigo-900">
                 <FileText className="w-8 h-8" />
               </div>
               <h3 className="font-extrabold text-slate-950 dark:text-white text-base tracking-tight">
@@ -558,7 +582,7 @@ export default function InvoicesPage({
                       <h4 className="font-extrabold text-slate-900 dark:text-white text-sm leading-tight truncate max-w-[160px]">
                         {inv.vendor || "Unknown"}
                       </h4>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate max-w-[160px]">
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate max-w-[160px]">
                         📄 {inv.fileName}
                       </p>
                     </div>
@@ -569,28 +593,28 @@ export default function InvoicesPage({
                           maximumFractionDigits: 2,
                         })}{" "}
                       </span>
-                      <span className="text-[10px] font-bold text-slate-400">{inv.currency}</span>
+                      <span className="text-xs font-bold text-slate-400">{inv.currency}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-100/60 dark:border-slate-700/60">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${categoryColor}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider border ${categoryColor}`}>
                         {language === "ka" ? categoryLabel.ka : categoryLabel.en}
                       </span>
                       {isInvoiceOverBudget(inv.category, inv.currency) && (
-                        <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-red-600 bg-red-50 border border-red-200/50 rounded-md px-1.5 py-0.5 uppercase tracking-wider animate-pulse">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-red-600 bg-red-50 border border-red-200/50 rounded-md px-1.5 py-0.5 uppercase tracking-wider animate-pulse">
                           <AlertCircle className="w-2 h-2 shrink-0" />
                           <span>{language === "ka" ? "ლიმიტს გარეთ" : "Over Budget"}</span>
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400">{inv.date}</span>
+                    <span className="text-xs font-semibold text-slate-400">{inv.date}</span>
                   </div>
 
                   {inv.items && inv.items.length > 0 && (
-                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-850 rounded-xl p-2 max-w-full">
-                      <span className="font-bold text-slate-400 block mb-0.5 text-[8px] uppercase tracking-widest">
+                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-850 rounded-xl p-2 max-w-full">
+                      <span className="font-bold text-slate-400 block mb-0.5 text-xs uppercase tracking-widest">
                         {language === "ka" ? "პროდუქტები" : "Purchased items"}
                       </span>
                       <div className="truncate text-slate-600 dark:text-slate-300">
@@ -606,7 +630,7 @@ export default function InvoicesPage({
                         e.stopPropagation();
                         onSelectInvoice(inv);
                       }}
-                      className="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1"
+                      className="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>{language === "ka" ? "დეტალები" : "Details"}</span>

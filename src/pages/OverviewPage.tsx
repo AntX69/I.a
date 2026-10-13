@@ -25,6 +25,7 @@ import {
   TRANSLATIONS 
 } from "../types";
 import OnboardingChecklist from "../components/OnboardingChecklist";
+import PageHeader from "../components/PageHeader";
 
 export interface OverviewPageProps {
   language: Language;
@@ -238,6 +239,37 @@ export default function OverviewPage({
 
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Page Header Component */}
+      <PageHeader
+        title={language === "ka" ? "ფინანსური მიმოხილვა" : "Financial Overview"}
+        subtitle={language === "ka" ? "მიმდინარე ბალანსი, ხარჯები და ძირითადი ინდიკატორები" : "Real-time spend tracking, category limits, and performance metrics"}
+        actions={
+          <div className="flex items-center gap-2">
+            {canUpload && (
+              <button
+                type="button"
+                onClick={() => {
+                  onNavigateToView("invoices");
+                  onOpenUpload();
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-600/10 cursor-pointer flex items-center gap-1.5"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>{language === "ka" ? "ინვოისის ატვირთვა" : "Upload Invoice"}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onOpenExport}
+              className="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{language === "ka" ? "ექსპორტი" : "Export"}</span>
+            </button>
+          </div>
+        }
+      />
+
       {/* 1. Onboarding Checklist Banner/Widget */}
       <OnboardingChecklist
         language={language}
@@ -262,9 +294,9 @@ export default function OverviewPage({
 
       {/* 0-Invoices Welcome Banner */}
       {invoiceCount === 0 && (
-        <div className="bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 border border-indigo-150/70 dark:border-slate-800 rounded-3xl p-8 sm:p-10 text-center shadow-lg shadow-indigo-500/5 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-indigo-50/90 via-white to-slate-50 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 border border-indigo-150/70 dark:border-slate-800 rounded-2xl p-8 sm:p-10 text-center shadow-lg shadow-indigo-500/5 relative overflow-hidden">
           <div className="max-w-xl mx-auto space-y-4">
-            <div className="w-16 h-16 rounded-3xl bg-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-300/40 dark:shadow-none animate-pulse">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-300/40 dark:shadow-none animate-pulse">
               <Sparkles className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -305,9 +337,9 @@ export default function OverviewPage({
       {/* 2. KPI Cards: 4 in a single equal-height row on desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
         {/* Card 1: Total Invoices */}
-        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 dark:text-slate-500 mb-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">
+            <span className="text-xs font-extrabold uppercase tracking-wider">
               {t.totalInvoices}
             </span>
             <div className="p-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-xl">
@@ -318,16 +350,16 @@ export default function OverviewPage({
             <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               {invoiceCount}
             </div>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mt-1">
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">
               {language === "ka" ? "აქტიურ სივრცეში" : "In active workspace"}
             </p>
           </div>
         </div>
 
         {/* Card 2: Total Spend in GEL with foreign breakdown */}
-        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 dark:text-slate-500 mb-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">
+            <span className="text-xs font-extrabold uppercase tracking-wider">
               {language === "ka" ? "ჯამური ხარჯი" : "Total Spend"}
             </span>
             <div className="p-2 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl">
@@ -342,7 +374,7 @@ export default function OverviewPage({
               })}{" "}
               <span className="text-sm font-extrabold text-slate-400">₾</span>
             </div>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mt-1 truncate">
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1 truncate">
               {foreignCurrencies.length > 0 ? (
                 foreignCurrencies.map(([cur, amt]) => `${cur}: ${amt.toFixed(1)}`).join(" · ")
               ) : (
@@ -353,9 +385,9 @@ export default function OverviewPage({
         </div>
 
         {/* Card 3: Overall Budget Utilization % */}
-        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 dark:text-slate-500 mb-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">
+            <span className="text-xs font-extrabold uppercase tracking-wider">
               {language === "ka" ? "ბიუჯეტის ათვისება" : "Budget Utilization"}
             </span>
             <div className="p-2 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl">
@@ -373,7 +405,7 @@ export default function OverviewPage({
               }`}>
                 {budgetUtilizationPct}%
               </span>
-              <span className="text-[11px] font-extrabold text-slate-400">
+              <span className="text-xs font-extrabold text-slate-400">
                 / {totalBudgetGEL.toLocaleString()} ₾
               </span>
             </div>
@@ -393,9 +425,9 @@ export default function OverviewPage({
         </div>
 
         {/* Card 4: Largest Category */}
-        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 dark:text-slate-500 mb-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">
+            <span className="text-xs font-extrabold uppercase tracking-wider">
               {language === "ka" ? "უდიდესი კატეგორია" : "Top Category"}
             </span>
             <div className="p-2 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl">
@@ -412,7 +444,7 @@ export default function OverviewPage({
                 "-"
               )}
             </div>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mt-1 truncate">
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1 truncate">
               {largestCategoryAmount > 0 ? (
                 `${largestCategoryAmount.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ₾ (${Math.round((largestCategoryAmount / (totalSpendGEL || 1)) * 100)}%)`
               ) : (
@@ -424,7 +456,7 @@ export default function OverviewPage({
       </div>
 
       {/* 3. Main Chart: Spend by Months */}
-      <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+      <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div>
             <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
@@ -477,7 +509,7 @@ export default function OverviewPage({
                         style={{ width: `${Math.max(3, pct)}%` }}
                       />
                     </div>
-                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-100/50 dark:border-indigo-800/50 w-12 text-center shrink-0">
+                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-100/50 dark:border-indigo-800/50 w-12 text-center shrink-0">
                       {overallPct.toFixed(0)}%
                     </span>
                   </div>
@@ -491,7 +523,7 @@ export default function OverviewPage({
       {/* Grid: 4. Recent 5 Invoices & 5. Top Smart Insight */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left (cols 7): Recent 5 Invoices */}
-        <div className="lg:col-span-7 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
               <div>
@@ -536,11 +568,11 @@ export default function OverviewPage({
                           <span className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[140px] sm:max-w-[200px]">
                             {inv.vendor}
                           </span>
-                          <span className={`inline-block px-1.5 py-0.2 rounded text-[9px] font-bold uppercase border ${catColor}`}>
+                          <span className={`inline-block px-1.5 py-0.2 rounded text-xs font-bold uppercase border ${catColor}`}>
                             {language === "ka" ? catLabel.ka : catLabel.en}
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium block mt-0.5">
+                        <span className="text-xs text-slate-400 dark:text-slate-500 font-medium block mt-0.5">
                           {inv.date}
                         </span>
                       </div>
@@ -552,7 +584,7 @@ export default function OverviewPage({
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}{" "}
-                            <span className="text-[10px] font-bold text-slate-400">{inv.currency}</span>
+                            <span className="text-xs font-bold text-slate-400">{inv.currency}</span>
                           </div>
                         </div>
                         <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
@@ -578,7 +610,7 @@ export default function OverviewPage({
         {/* Right (cols 5): Single top insight card & Quick Actions */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           {/* Smart Insight Card */}
-          <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-xl border border-slate-800/80 relative overflow-hidden flex flex-col justify-between flex-1">
+          <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-xl border border-slate-800/80 relative overflow-hidden flex flex-col justify-between flex-1">
             <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-600/10 rounded-full blur-2xl pointer-events-none" />
 
             <div>
@@ -594,7 +626,7 @@ export default function OverviewPage({
                 <button
                   type="button"
                   onClick={() => onNavigateToView("analytics")}
-                  className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer"
                 >
                   <span>{language === "ka" ? "ყველა რჩევა →" : "All tips →"}</span>
                 </button>
@@ -633,7 +665,7 @@ export default function OverviewPage({
           </div>
 
           {/* 6. Quick Actions Card */}
-          <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-3">
+          <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {language === "ka" ? "სწრაფი მოქმედებები" : "Quick Actions"}
             </h4>

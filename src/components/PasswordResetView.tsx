@@ -102,10 +102,10 @@ export const PasswordResetView: React.FC<PasswordResetViewProps> = ({
 
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPassword || newPassword.length < 6) {
+    if (!newPassword || newPassword.length < 8) {
       if (showToast) {
         showToast(
-          language === "ka" ? "პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო" : "Password must be at least 6 characters",
+          language === "ka" ? "პაროლი უნდა იყოს მინიმუმ 8 სიმბოლო" : "Password must be at least 8 characters",
           "error"
         );
       }
@@ -158,7 +158,7 @@ export const PasswordResetView: React.FC<PasswordResetViewProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 animate-fadeIn relative">
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-fadeIn relative">
         
         {/* Header Navigation */}
         <div className="flex items-center justify-between">
@@ -247,7 +247,7 @@ export const PasswordResetView: React.FC<PasswordResetViewProps> = ({
             </div>
 
             <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
                 <span>{language === "ka" ? "აღდგენის ტოკენი:" : "Token:"}</span>
                 <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{requestSuccessInfo.token}</span>
               </div>
@@ -355,25 +355,25 @@ export const PasswordResetView: React.FC<PasswordResetViewProps> = ({
 
                 <form onSubmit={handleResetSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                      {language === "ka" ? "ახალი პაროლი" : "New Password"}
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      {language === "ka" ? "ახალი პაროლი (მინიმუმ 8 სიმბოლო)" : "New Password (min 8 characters)"}
                     </label>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
                         type="password"
                         required
-                        minLength={6}
+                        minLength={8}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-500"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                       {language === "ka" ? "გაიმეორეთ ახალი პაროლი" : "Confirm New Password"}
                     </label>
                     <div className="relative">
@@ -381,11 +381,11 @@ export const PasswordResetView: React.FC<PasswordResetViewProps> = ({
                       <input
                         type="password"
                         required
-                        minLength={6}
+                        minLength={8}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-500"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-500"
                       />
                     </div>
                   </div>

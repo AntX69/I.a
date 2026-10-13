@@ -52,7 +52,7 @@ export default function VendorAnalytics({
   const totalGELSpending = sortedVendorsBySpend.reduce((sum, v) => sum + v.totalGEL, 0);
 
   return (
-    <div className="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm mb-8">
+    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm mb-8">
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
         <div className="flex items-center gap-2.5">
@@ -63,14 +63,14 @@ export default function VendorAnalytics({
             <h4 className="text-sm font-black text-slate-800">
               {language === "ka" ? "მომწოდებლების დეტალური ანალიტიკა" : "Vendor & Supplier Spend Analysis"}
             </h4>
-            <p className="text-[10px] text-slate-400 font-semibold">
+            <p className="text-xs text-slate-400 font-semibold">
               {language === "ka" 
                 ? "დასახელებების მიხედვით ხარჯებისა და სიხშირის ანალიზი" 
                 : "Granular audit of partner transaction density and capital concentration"}
             </p>
           </div>
         </div>
-        <span className="text-[10px] font-mono tracking-widest text-slate-400 font-bold uppercase">
+        <span className="text-xs font-mono tracking-widest text-slate-400 font-bold uppercase">
           {invoices.length} {language === "ka" ? "ინვოისი" : "Invoices"}
         </span>
       </div>
@@ -84,7 +84,7 @@ export default function VendorAnalytics({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Top Spenders List */}
           <div className="space-y-4">
-            <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <h5 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <Award className="w-4 h-4 text-amber-500" />
               {language === "ka" ? "უმსხვილესი მომწოდებლები (ხარჯი)" : "Top Partners by Capital Outflow"}
             </h5>
@@ -97,7 +97,7 @@ export default function VendorAnalytics({
                   <div key={index} className="space-y-1.5 group">
                     <div className="flex items-center justify-between text-xs font-bold">
                       <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-lg bg-slate-100 text-[10px] text-slate-500 font-bold">
+                        <span className="w-5 h-5 flex items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-500 font-bold">
                           {index + 1}
                         </span>
                         <span className="text-slate-800 group-hover:text-indigo-600 transition-colors">
@@ -108,7 +108,7 @@ export default function VendorAnalytics({
                         <span className="text-slate-900">
                           ₾ {vendor.totalGEL.toLocaleString(undefined, { maximumFractionDigits: 1 })}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-bold">
+                        <span className="text-xs text-slate-400 font-bold">
                           ({percentage.toFixed(0)}%)
                         </span>
                       </div>
@@ -128,7 +128,7 @@ export default function VendorAnalytics({
 
           {/* High Frequency Suppliers */}
           <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 pt-5 md:pt-0 md:pl-6">
-            <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <h5 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <BarChart3 className="w-4 h-4 text-indigo-500" />
               {language === "ka" ? "ყველაზე ხშირი მომწოდებლები (რაოდენობა)" : "Transaction Frequency Audit"}
             </h5>
@@ -145,7 +145,7 @@ export default function VendorAnalytics({
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                         <div>
                           <div className="text-xs font-black text-slate-800">{vendor.name}</div>
-                          <div className="text-[10px] text-slate-400 font-semibold capitalize">
+                          <div className="text-xs text-slate-400 font-semibold capitalize">
                             {vendor.categories.join(", ")}
                           </div>
                         </div>
@@ -154,7 +154,7 @@ export default function VendorAnalytics({
                         <div className="text-xs font-black text-slate-900">
                           {vendor.count} {language === "ka" ? "ტრანზაქცია" : "Trans."}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-bold">
+                        <div className="text-xs text-slate-400 font-bold">
                           {language === "ka" ? "სულ:" : "Total:"} ₾ {vendor.totalGEL.toFixed(0)}
                         </div>
                       </div>

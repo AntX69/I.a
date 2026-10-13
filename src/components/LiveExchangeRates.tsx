@@ -57,7 +57,7 @@ export default function LiveExchangeRates({
   };
 
   return (
-    <div className="bg-white border border-slate-200/60 rounded-3xl p-5 shadow-sm mb-8">
+    <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Title */}
         <div className="flex items-center gap-2.5">
@@ -69,7 +69,7 @@ export default function LiveExchangeRates({
               {language === "ka" ? "საორიენტაციო კურსები" : "Reference rates"}
             </h4>
             {lastManuallySet && (
-              <p className="text-[10px] text-slate-400 font-semibold">
+              <p className="text-xs text-slate-400 font-semibold">
                 {language === "ka"
                   ? `ხელით მითითებულია: ${lastManuallySet}`
                   : `Manually set: ${lastManuallySet}`}
@@ -82,7 +82,7 @@ export default function LiveExchangeRates({
         <div className="flex flex-wrap items-center gap-3">
           {/* USD Rate Card */}
           <div className="bg-slate-50 border border-slate-100 px-3.5 py-1.5 rounded-xl flex items-center gap-2">
-            <span className="text-[10px] font-black text-slate-400">USD/GEL</span>
+            <span className="text-xs font-black text-slate-400">USD/GEL</span>
             {isEditing ? (
               <input
                 type="number"
@@ -100,7 +100,7 @@ export default function LiveExchangeRates({
 
           {/* EUR Rate Card */}
           <div className="bg-slate-50 border border-slate-100 px-3.5 py-1.5 rounded-xl flex items-center gap-2">
-            <span className="text-[10px] font-black text-slate-400">EUR/GEL</span>
+            <span className="text-xs font-black text-slate-400">EUR/GEL</span>
             {isEditing ? (
               <input
                 type="number"
@@ -124,7 +124,7 @@ export default function LiveExchangeRates({
                 className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span className="text-[10px] uppercase font-bold">
+                <span className="text-xs uppercase font-bold">
                   {language === "ka" ? "შენახვა" : "Save"}
                 </span>
               </button>
@@ -137,7 +137,7 @@ export default function LiveExchangeRates({
                   });
                   setIsEditing(true);
                 }}
-                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/50 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/50 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
               >
                 {language === "ka" ? "კორექტირება" : "Override"}
               </button>

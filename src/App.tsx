@@ -96,6 +96,11 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<ExtractedInvoice | null>(null);
 
+  // Sync document language for typography and accessibility
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
   // Authentication & Visual Navigation States
   const { 
     user, 
@@ -1048,7 +1053,7 @@ export default function App() {
                   title={language === "ka" ? "დღის რეჟიმი" : "Light Mode"}
                 >
                   <Sun className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="hidden lg:inline text-[11px]">{language === "ka" ? "დღის" : "Light"}</span>
+                  <span className="hidden lg:inline text-xs">{language === "ka" ? "დღის" : "Light"}</span>
                 </button>
                 <button
                   onClick={() => setIsDarkMode(true)}
@@ -1060,7 +1065,7 @@ export default function App() {
                   title={language === "ka" ? "ღამის რეჟიმი (მუქი ფონი)" : "Dark Mode"}
                 >
                   <Moon className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden lg:inline text-[11px]">{language === "ka" ? "ღამის" : "Dark"}</span>
+                  <span className="hidden lg:inline text-xs">{language === "ka" ? "ღამის" : "Dark"}</span>
                 </button>
               </div>
 
@@ -1102,7 +1107,7 @@ export default function App() {
             <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-lg px-4 py-4 space-y-4 animate-fadeIn shadow-lg">
               {/* Language Switcher for Mobile */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                   {language === "ka" ? "ენა / Language" : "Language"}
                 </span>
                 <div className="flex bg-slate-100 rounded-xl p-1 border border-slate-200 shadow-sm w-full">
@@ -1156,7 +1161,7 @@ export default function App() {
         {/* Hero Section */}
         <section className="relative py-20 sm:py-28 px-4">
           <div className="max-w-4xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-indigo-700 text-[11px] font-bold uppercase tracking-wider shadow-sm animate-bounce">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-indigo-700 text-xs font-bold uppercase tracking-wider shadow-sm animate-bounce">
               <Sparkles className="w-3.5 h-3.5" />
               <span>{language === "ka" ? "ინოვაციური AI გადაწყვეტილება" : "Innovative AI Solution"}</span>
             </div>
@@ -1199,7 +1204,7 @@ export default function App() {
 
         {/* Bento Grid Features Visualization (Simulation / Screenshot Block) */}
         <section className="py-8 px-4 max-w-5xl mx-auto">
-          <div className="bg-white border border-indigo-100 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div className="bg-white border border-indigo-100 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 rounded-full blur-2xl -z-10" />
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-slate-100 pb-6">
               <div>
@@ -1226,7 +1231,7 @@ export default function App() {
                   <Activity className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div className="text-3xl font-black text-slate-950">1,245.80 ₾</div>
-                <div className="text-[11px] font-medium text-slate-400">
+                <div className="text-xs font-medium text-slate-400">
                   {language === "ka" ? "სამივე სივრცის გათვალისწინებით" : "Aggregated across all spaces"}
                 </div>
               </div>
@@ -1248,7 +1253,7 @@ export default function App() {
                   </div>
                   <div className="flex justify-between text-slate-400 font-medium">
                     <span>{language === "ka" ? "კატეგორია:" : "Category:"}</span>
-                    <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded-md font-bold uppercase text-[9px] border border-orange-100">
+                    <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded-md font-bold uppercase text-xs border border-orange-100">
                       {language === "ka" ? "საოფისე ხარჯი" : "Office Expense"}
                     </span>
                   </div>
@@ -1405,7 +1410,7 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
               {/* Plan 1: Single */}
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-6 flex flex-col justify-between">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-6 flex flex-col justify-between">
                 <div className="space-y-4">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                     {language === "ka" ? "მცირე ბიზნესისთვის" : "For Freelancers & Startups"}
@@ -1453,8 +1458,8 @@ export default function App() {
               </div>
 
               {/* Plan 2: Multi */}
-              <div className="bg-indigo-950 border-2 border-indigo-500 rounded-3xl p-8 space-y-6 flex flex-col justify-between relative shadow-2xl">
-                <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-indigo-500 rounded-full text-[9px] font-black text-white uppercase tracking-widest shadow-md">
+              <div className="bg-indigo-950 border-2 border-indigo-500 rounded-2xl p-8 space-y-6 flex flex-col justify-between relative shadow-2xl">
+                <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-indigo-500 rounded-full text-xs font-black text-white uppercase tracking-widest shadow-md">
                   {language === "ka" ? "ყველაზე პოპულარული" : "MOST POPULAR"}
                 </div>
                 
@@ -1616,7 +1621,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="text-slate-400 text-[11px] font-semibold z-10">
+          <div className="text-slate-400 text-xs font-semibold z-10">
             &copy; {new Date().getFullYear()} {language === "ka" ? "ინვოისების ანალიზატორი" : "Invoice Analyzer"}
           </div>
         </div>
@@ -1633,7 +1638,7 @@ export default function App() {
             </button>
             <button
               onClick={() => setLanguage(language === "ka" ? "en" : "ka")}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-black transition-all cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-black transition-all cursor-pointer"
             >
               <Globe className="w-3.5 h-3.5 text-indigo-600" />
               <span>{language === "ka" ? "ENGLISH" : "ქართული"}</span>
@@ -1692,7 +1697,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setCurrentView("forgot_password")}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
                     >
                       {language === "ka" ? "დაგავიწყდა პაროლი?" : "Forgot password?"}
                     </button>
@@ -1729,7 +1734,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="text-center text-[10px] font-semibold text-slate-400">
+          <div className="text-center text-xs font-semibold text-slate-400">
             {language === "ka" 
               ? "ავტორიზაციით თქვენ ეთანხმებით მომსახურების წესებსა და პირობებს." 
               : "By continuing, you agree to our Terms of Service and Privacy Policy."}
@@ -1767,7 +1772,7 @@ export default function App() {
             </p>
           </div>
 
-          <div className="text-slate-400 text-[11px] font-semibold z-10">
+          <div className="text-slate-400 text-xs font-semibold z-10">
             &copy; {new Date().getFullYear()} {language === "ka" ? "ინვოისების ანალიზატორი" : "Invoice Analyzer"}
           </div>
         </div>
@@ -1775,7 +1780,7 @@ export default function App() {
         {/* Right Side: Form Panel */}
         <div className="flex-1 flex flex-col justify-between p-6 sm:p-12 lg:p-16 bg-white">
           <div className="flex justify-between items-center">
-            <span className="text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100/50">
+            <span className="text-xs font-black uppercase text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100/50">
               {language === "ka" ? "ავტორიზებული:" : "Authorized:"} {currentUser.email}
             </span>
             <button
@@ -1849,7 +1854,7 @@ export default function App() {
                       <span className="text-sm font-black text-slate-950">
                         {language === "ka" ? `${PRICING.single.GEL} ₾` : `$${PRICING.single.USD}`}
                       </span>
-                      <span className="text-[10px] text-slate-400 block font-semibold">
+                      <span className="text-xs text-slate-400 block font-semibold">
                         {language === "ka" ? "1 მომხმარებელი" : "1 seat included"}
                       </span>
                     </div>
@@ -1877,7 +1882,7 @@ export default function App() {
                       <span className="text-sm font-black text-slate-950">
                         {language === "ka" ? `${PRICING.multi.GEL} ₾` : `$${PRICING.multi.USD}`}
                       </span>
-                      <span className="text-[10px] text-slate-400 block font-semibold">
+                      <span className="text-xs text-slate-400 block font-semibold">
                         {language === "ka" ? "გუნდური როლები" : "Multi-role system"}
                       </span>
                     </div>
@@ -1895,7 +1900,7 @@ export default function App() {
             </form>
           </div>
 
-          <div className="text-center text-[10px] font-semibold text-slate-400">
+          <div className="text-center text-xs font-semibold text-slate-400">
             {language === "ka" 
               ? "შეგიძლიათ ტარიფი შეცვალოთ ნებისმიერ დროს კომპანიის პარამეტრებიდან." 
               : "Pricing plan selection is a simulation. No real credit card required at this step."}
@@ -1919,7 +1924,7 @@ export default function App() {
       }
     >
       {isRoleLockedFromUrl && (
-        <div className="bg-slate-950 text-slate-100 text-[11px] py-2 px-4 flex items-center justify-between gap-3 font-bold border-b border-slate-800">
+        <div className="bg-slate-950 text-slate-100 text-xs py-2 px-4 flex items-center justify-between gap-3 font-bold border-b border-slate-800">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
             <span>
@@ -1938,7 +1943,7 @@ export default function App() {
                 window.history.pushState({}, "", url.toString());
               } catch (_) {}
             }}
-            className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-[9px] font-black transition-all cursor-pointer shadow-sm shadow-amber-500/10"
+            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm shadow-amber-500/10"
           >
             {language === "ka" ? "მფლობელის რეჟიმზე დაბრუნება" : "Return to Owner Mode"}
           </button>
@@ -1961,7 +1966,7 @@ export default function App() {
               <h1 id="app-title" className={`font-bold text-sm sm:text-base lg:text-lg leading-none truncate ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                 {t.title}
               </h1>
-              <p className={`text-[11px] mt-1 truncate ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
+              <p className={`text-xs mt-1 truncate ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
                 {language === "ka" ? "ინვოისებისა და ხარჯების ჭკვიანი ანალიზი" : "Intelligent invoice & expense management"}
               </p>
             </div>
@@ -2038,7 +2043,7 @@ export default function App() {
 
               {showWorkspaceDropdown && (
                 <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 animate-fadeIn">
-                  <div className="px-3.5 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
+                  <div className="px-3.5 py-2 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
                     <span>{language === "ka" ? "სამუშაო სივრცეები" : "Workspaces"}</span>
                   </div>
                   <div className="max-h-56 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -2202,7 +2207,7 @@ export default function App() {
                             setNewWorkspaceName("");
                             setShowWorkspaceDropdown(false);
                           }}
-                          className="px-2.5 py-1 bg-indigo-600 text-white rounded-xl text-[10px] font-bold hover:bg-indigo-700 cursor-pointer"
+                          className="px-2.5 py-1 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 cursor-pointer"
                         >
                           {language === "ka" ? "დამატება" : "Add"}
                         </button>
@@ -2216,7 +2221,7 @@ export default function App() {
             {/* 2. Active Pricing Plan Badge */}
             {activePlan && (
               <div className="flex items-center px-2.5 py-1 bg-indigo-50/60 dark:bg-slate-800 border border-indigo-100/40 dark:border-slate-700 rounded-xl text-xs font-bold shadow-xs shrink-0">
-                <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${
                   activePlan === "multi" 
                     ? "bg-indigo-600 text-white shadow-xs" 
                     : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300/40 dark:border-slate-600"
@@ -2269,7 +2274,7 @@ export default function App() {
 
                   {/* Theme Switcher */}
                   <div className="px-1 py-0.5 space-y-1.5">
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                    <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                       {language === "ka" ? "თემა / რეჟიმი" : "Theme Mode"}
                     </span>
                     <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
@@ -2304,7 +2309,7 @@ export default function App() {
 
                   {/* Language Switcher */}
                   <div className="px-1 py-0.5 space-y-1.5">
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                    <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
                       {language === "ka" ? "ენა" : "Language"}
                     </span>
                     <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
@@ -2385,7 +2390,7 @@ export default function App() {
           <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-lg px-4 py-4 space-y-4 animate-fadeIn shadow-lg">
             {/* Workspace Selector for Mobile */}
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 {language === "ka" ? "სამუშაო სივრცე" : "Workspace / Entity"}
               </span>
               <div className="relative">
@@ -2402,7 +2407,7 @@ export default function App() {
 
                 {showWorkspaceDropdown && (
                   <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 animate-fadeIn">
-                    <div className="px-3 py-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
+                    <div className="px-3 py-1.5 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
                       {language === "ka" ? "სამუშაო სივრცეები" : "Workspaces"}
                     </div>
                     <div className="max-h-48 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -2550,7 +2555,7 @@ export default function App() {
                               setNewWorkspaceName("");
                               setShowWorkspaceDropdown(false);
                             }}
-                            className="px-2 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                            className="px-2 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold cursor-pointer"
                           >
                             {language === "ka" ? "დამატება" : "Add"}
                           </button>
@@ -2560,14 +2565,14 @@ export default function App() {
 
                     {/* Dark & Light Theme Switcher inside Mobile Workspace Dropdown */}
                     <div className="p-2 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 space-y-1">
-                      <div className="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+                      <div className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
                         {language === "ka" ? "თემა / რეჟიმი" : "Theme Mode"}
                       </div>
                       <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-lg border border-slate-200/70 dark:border-slate-700/70">
                         <button
                           type="button"
                           onClick={() => setIsDarkMode(false)}
-                          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded text-xs font-bold transition-all cursor-pointer ${
                             !isDarkMode
                               ? "bg-white dark:bg-slate-900 text-indigo-600 shadow-xs border border-slate-200/60 dark:border-slate-700"
                               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
@@ -2579,7 +2584,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => setIsDarkMode(true)}
-                          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded text-xs font-bold transition-all cursor-pointer ${
                             isDarkMode
                               ? "bg-slate-900 text-amber-400 shadow-xs border border-slate-700"
                               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
@@ -2598,11 +2603,11 @@ export default function App() {
             {/* Active Pricing Plan Badge & Switcher for Mobile */}
             {activePlan && (
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                   {language === "ka" ? "აქტიური ტარიფი" : "Active Plan"}
                 </span>
                 <div className="flex items-center justify-between p-3 bg-indigo-50/60 dark:bg-slate-800 border border-indigo-100/40 dark:border-slate-700 rounded-xl">
-                  <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                  <span className={`px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider ${
                     activePlan === "multi" 
                       ? "bg-indigo-600 text-white shadow-xs" 
                       : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300/40 dark:border-slate-600"
@@ -2617,7 +2622,7 @@ export default function App() {
 
             {/* Theme Mode Switcher for Mobile */}
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 {language === "ka" ? "რეჟიმი / Theme" : "Theme Mode"}
               </span>
               <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 border border-slate-200 dark:border-slate-700 shadow-sm w-full">
@@ -2640,7 +2645,7 @@ export default function App() {
 
             {/* Language Switcher for Mobile */}
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 {language === "ka" ? "ენა / Language" : "Language"}
               </span>
               <div className="flex bg-slate-100 rounded-xl p-1 border border-slate-200 shadow-sm w-full">
@@ -2662,7 +2667,7 @@ export default function App() {
             {/* Mobile Navigation Links */}
             {currentUser && (
               <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                   {language === "ka" ? "ნავიგაცია" : "Navigation"}
                 </span>
                 <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
@@ -3030,7 +3035,7 @@ export default function App() {
 
       {showWorkspaceModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
               <h3 className="text-sm font-black text-slate-800">
                 {language === "ka" ? "სამუშაო სივრცეების მართვა" : "Manage Workspaces"}
@@ -3049,7 +3054,7 @@ export default function App() {
 
             {/* List and manage existing workspaces */}
             <div className="mt-4 space-y-2.5 max-h-52 overflow-y-auto pr-1">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">
+              <div className="text-xs font-black text-slate-400 uppercase tracking-wider mb-1">
                 {language === "ka" ? "აქტიური სივრცეები" : "Active Workspaces"}
               </div>
               {workspaces.map((ws, index) => (
@@ -3144,7 +3149,7 @@ export default function App() {
 
             {/* Create new workspace section */}
             <div className="mt-5 pt-4 border-t border-slate-100 space-y-3">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+              <div className="text-xs font-black text-slate-400 uppercase tracking-wider">
                 {language === "ka" ? "ახალი სივრცის დამატება" : "Add New Workspace"}
               </div>
               <div className="flex gap-2">
@@ -3185,7 +3190,7 @@ export default function App() {
 
       {placeholderModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[999] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden text-center space-y-6">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden text-center space-y-6">
             <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-orange-500" />
             
             <div className="mx-auto w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">

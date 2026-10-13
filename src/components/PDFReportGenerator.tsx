@@ -63,7 +63,7 @@ export default function PDFReportGenerator({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn print:bg-white print:p-0">
-      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border border-slate-100 flex flex-col print:shadow-none print:border-none print:max-h-none print:overflow-visible print:rounded-none">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border border-slate-100 flex flex-col print:shadow-none print:border-none print:max-h-none print:overflow-visible print:rounded-none">
         
         {/* Interactive Action Header (hidden on print) */}
         <div className="flex items-center justify-between pb-5 border-b border-slate-100 print:hidden">
@@ -129,14 +129,14 @@ export default function PDFReportGenerator({
             </div>
 
             <div className="text-right">
-              <p className="text-[10px] text-slate-400 mt-2 font-mono">ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}</p>
+              <p className="text-xs text-slate-400 mt-2 font-mono">ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}</p>
             </div>
           </div>
 
           {/* Quick Metrics Grid */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+              <div className="text-xs font-black text-slate-400 uppercase tracking-wider">
                 {language === "ka" ? "ჯამური ხარჯი" : "CONSOLIDATED SPEND"}
               </div>
               <div className="text-lg font-black text-slate-900 mt-1">
@@ -144,7 +144,7 @@ export default function PDFReportGenerator({
               </div>
             </div>
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+              <div className="text-xs font-black text-slate-400 uppercase tracking-wider">
                 {language === "ka" ? "დოკუმენტები" : "DOCUMENTS"}
               </div>
               <div className="text-lg font-black text-slate-900 mt-1">
@@ -152,7 +152,7 @@ export default function PDFReportGenerator({
               </div>
             </div>
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+              <div className="text-xs font-black text-slate-400 uppercase tracking-wider">
                 {language === "ka" ? "ვალუტა" : "CONSOLIDATION CURRENCY"}
               </div>
               <div className="text-lg font-black text-slate-900 mt-1">
@@ -173,14 +173,14 @@ export default function PDFReportGenerator({
                 return (
                   <div key={cat} className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 flex items-center justify-between">
                     <div>
-                      <div className="text-[10px] font-bold text-slate-500 capitalize">
+                      <div className="text-xs font-bold text-slate-500 capitalize">
                         {language === "ka" ? label.ka : label.en}
                       </div>
                       <div className="text-xs font-black text-slate-800 mt-0.5">
                         ₾ {val.toFixed(2)}
                       </div>
                     </div>
-                    <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">
+                    <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
                       {percentage.toFixed(0)}%
                     </span>
                   </div>
@@ -197,7 +197,7 @@ export default function PDFReportGenerator({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b-2 border-slate-900 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
+                  <tr className="border-b-2 border-slate-900 text-slate-400 font-bold uppercase tracking-wider text-xs">
                     <th className="py-2.5">{language === "ka" ? "მომწოდებელი" : "VENDOR"}</th>
                     <th className="py-2.5">{language === "ka" ? "თარიღი" : "DATE"}</th>
                     <th className="py-2.5">{language === "ka" ? "კატეგორია" : "CATEGORY"}</th>
@@ -230,7 +230,7 @@ export default function PDFReportGenerator({
           {/* Document Signatures block for visual fidelity */}
           <div className="pt-12 grid grid-cols-2 gap-8 border-t border-slate-100">
             <div className="space-y-4">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <div className="text-xs font-black text-slate-400 uppercase tracking-widest">
                 PREPARED BY (AUDITOR / ACCOUNTANT)
               </div>
               <div className="pt-8 border-b border-slate-300 w-48 text-xs font-mono font-bold text-slate-600 uppercase">
@@ -238,7 +238,7 @@ export default function PDFReportGenerator({
               </div>
             </div>
             <div className="space-y-4 text-right flex flex-col items-end">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <div className="text-xs font-black text-slate-400 uppercase tracking-widest">
                 AUTHORIZED SIGNATURE / STAMP
               </div>
               <div className="pt-8 border-b border-slate-300 w-48 text-xs font-mono font-bold text-slate-600">

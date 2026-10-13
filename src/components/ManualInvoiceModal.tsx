@@ -94,7 +94,7 @@ export default function ManualInvoiceModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border border-slate-100 flex flex-col">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border border-slate-100 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between pb-5 border-b border-slate-100">
           <div className="flex items-center gap-3">
@@ -225,7 +225,7 @@ export default function ManualInvoiceModal({
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="inline-flex items-center gap-1.5 text-xs font-extrabold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-extrabold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2.5 py-1 rounded-xl transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 {language === "ka" ? "პუნქტის დამატება" : "Add Item"}
@@ -241,7 +241,7 @@ export default function ManualInvoiceModal({
                     value={item.name}
                     onChange={(e) => handleItemChange(index, "name", e.target.value)}
                     placeholder={language === "ka" ? "პროდუქტის/მომსახურების სახელი" : "e.g. Hosting subscription"}
-                    className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-indigo-400"
+                    className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-indigo-400"
                     required
                   />
 
@@ -251,7 +251,7 @@ export default function ManualInvoiceModal({
                     value={item.quantity}
                     onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
                     placeholder="Qty"
-                    className="w-16 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-center focus:outline-none focus:border-indigo-400"
+                    className="w-16 px-2 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-center focus:outline-none focus:border-indigo-400"
                     min="1"
                     required
                   />
@@ -264,11 +264,11 @@ export default function ManualInvoiceModal({
                       value={item.price || ""}
                       onChange={(e) => handleItemChange(index, "price", e.target.value)}
                       placeholder="Price"
-                      className="w-full pl-2 pr-6 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-right focus:outline-none focus:border-indigo-400"
+                      className="w-full pl-2 pr-6 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-right focus:outline-none focus:border-indigo-400"
                       min="0"
                       required
                     />
-                    <span className="absolute right-2 top-2 text-[10px] text-slate-400 font-bold uppercase">{currency}</span>
+                    <span className="absolute right-2 top-2 text-xs text-slate-400 font-bold uppercase">{currency}</span>
                   </div>
 
                   {/* Remove */}
@@ -276,7 +276,7 @@ export default function ManualInvoiceModal({
                     type="button"
                     onClick={() => handleRemoveItem(index)}
                     disabled={items.length <= 1}
-                    className={`p-1.5 rounded-lg border transition-all ${
+                    className={`p-1.5 rounded-xl border transition-all ${
                       items.length <= 1
                         ? "text-slate-300 border-transparent cursor-not-allowed"
                         : "text-red-500 border-transparent hover:border-red-100 hover:bg-white cursor-pointer"

@@ -63,7 +63,7 @@ export default function InvoiceDetailModal({
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto animate-fadeIn">
-      <div className="bg-white/80 backdrop-blur-xl rounded-3xl w-full max-w-5xl shadow-2xl border border-slate-200/50 max-h-[90vh] flex flex-col animate-scaleUp">
+      <div className="bg-white/80 backdrop-blur-xl rounded-2xl w-full max-w-5xl shadow-2xl border border-slate-200/50 max-h-[90vh] flex flex-col animate-scaleUp">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/40">
@@ -281,7 +281,7 @@ export default function InvoiceDetailModal({
                               type="text"
                               value={item.name}
                               onChange={(e) => handleItemChange(index, "name", e.target.value)}
-                              className="w-full px-2 py-1 border border-slate-200 bg-white/60 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                              className="w-full px-2 py-1 border border-slate-200 bg-white/60 rounded-xl text-sm focus:outline-none focus:border-indigo-500"
                               placeholder="e.g. Printer Paper"
                             />
                           ) : (
@@ -294,7 +294,7 @@ export default function InvoiceDetailModal({
                               type="number"
                               value={item.quantity || 1}
                               onChange={(e) => handleItemChange(index, "quantity", Number(e.target.value))}
-                              className="w-12 px-1 py-1 border border-slate-200 bg-white/60 rounded-lg text-center text-sm focus:outline-none focus:border-indigo-500"
+                              className="w-12 px-1 py-1 border border-slate-200 bg-white/60 rounded-xl text-center text-sm focus:outline-none focus:border-indigo-500"
                             />
                           ) : (
                             <span className="text-slate-500 font-medium text-xs">{item.quantity || 1}</span>
@@ -306,7 +306,7 @@ export default function InvoiceDetailModal({
                               type="number"
                               value={item.price || 0}
                               onChange={(e) => handleItemChange(index, "price", Number(e.target.value))}
-                              className="w-20 px-1.5 py-1 border border-slate-200 bg-white/60 rounded-lg text-right text-sm focus:outline-none focus:border-indigo-500"
+                              className="w-20 px-1.5 py-1 border border-slate-200 bg-white/60 rounded-xl text-right text-sm focus:outline-none focus:border-indigo-500"
                             />
                           ) : (
                             <span className="text-slate-600 font-medium text-xs">
@@ -319,7 +319,7 @@ export default function InvoiceDetailModal({
                             <button
                               type="button"
                               onClick={() => removeItemRow(index)}
-                              className="text-red-500 hover:text-red-700 p-1 cursor-pointer hover:bg-red-50 rounded-lg"
+                              className="text-red-500 hover:text-red-700 p-1 cursor-pointer hover:bg-red-50 rounded-xl"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -354,10 +354,10 @@ export default function InvoiceDetailModal({
                 <h3 className="font-extrabold text-base tracking-wider text-slate-900 truncate uppercase">
                   {vendor || "COMPANY UNNAMED"}
                 </h3>
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
                   --- {language === "ka" ? "ამონაწერი — არ არის ფისკალური ქვითარი" : "EXTRACT — NOT A FISCAL RECEIPT"} ---
                 </p>
-                <div className="text-[10px] text-slate-500 space-y-0.5 mt-2">
+                <div className="text-xs text-slate-500 space-y-0.5 mt-2">
                   <p className="flex justify-between">
                     <span>{language === "ka" ? "თარიღი:" : "DATE:"}</span>
                     <span className="font-bold">{date || "YYYY-MM-DD"}</span>
@@ -392,13 +392,13 @@ export default function InvoiceDetailModal({
                             {it.name || "UNNAMED ITEM"}
                           </p>
                           {itemQty > 1 && (
-                            <p className="text-[10px] text-slate-400 font-medium">
+                            <p className="text-xs text-slate-400 font-medium">
                               {itemQty} x {itemPrice.toFixed(2)}
                             </p>
                           )}
                         </div>
                         <div className="text-slate-900 font-extrabold shrink-0 text-right">
-                          {itemSum.toFixed(2)} <span className="text-[10px]">{currency}</span>
+                          {itemSum.toFixed(2)} <span className="text-xs">{currency}</span>
                         </div>
                       </div>
                     );
@@ -436,7 +436,7 @@ export default function InvoiceDetailModal({
               </div>
 
               {/* Receipt Footer Message */}
-              <div className="text-center text-[9px] text-slate-400 mt-6 pt-4 border-t border-dashed border-slate-300 font-bold tracking-wider">
+              <div className="text-center text-xs text-slate-400 mt-6 pt-4 border-t border-dashed border-slate-300 font-bold tracking-wider">
                 *** {language === "ka" ? "გმადლობთ თანამშრომლობისთვის" : "THANK YOU FOR YOUR BUSINESS"} ***
               </div>
 

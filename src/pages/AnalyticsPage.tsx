@@ -22,6 +22,7 @@ import SmartInsights from "../components/SmartInsights";
 import InvoiceAnalytics from "../components/InvoiceAnalytics";
 import VendorAnalytics from "../components/VendorAnalytics";
 import InvoiceSummaryCards from "../components/InvoiceSummaryCards";
+import PageHeader from "../components/PageHeader";
 
 export interface AnalyticsPageProps {
   language: Language;
@@ -81,21 +82,13 @@ export default function AnalyticsPage({
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Page Header with Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            {language === "ka" ? "ფინანსური ანალიტიკა" : "Financial Analytics"}
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {language === "ka"
-              ? "დეტალური სტატისტიკა, ბიუჯეტების მართვა, მომწოდებლები და ვალუტის კურსები"
-              : "Comprehensive spending breakdown, budget caps, vendor insights, and exchange rates"}
-          </p>
-        </div>
-
-        {/* Period Selector */}
-        <div className="flex items-center gap-2">
+      {/* Page Header Component */}
+      <PageHeader
+        title={language === "ka" ? "ფინანსური ანალიტიკა" : "Financial Analytics"}
+        subtitle={language === "ka"
+          ? "დეტალური სტატისტიკა, ბიუჯეტების მართვა, მომწოდებლები და ვალუტის კურსები"
+          : "Comprehensive spending breakdown, budget caps, vendor insights, and exchange rates"}
+        actions={
           <div className="relative">
             <select
               value={periodFilter}
@@ -110,8 +103,8 @@ export default function AnalyticsPage({
               <ChevronDown className="w-3.5 h-3.5" />
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* 1. Summary Cards */}
       <InvoiceSummaryCards 

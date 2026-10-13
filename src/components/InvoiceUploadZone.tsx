@@ -128,7 +128,7 @@ export default function InvoiceUploadZone({
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={isAnalyzing ? undefined : triggerFileInput}
-        className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-3xl p-8 text-center transition-all duration-200 ${
+        className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-200 ${
           isAnalyzing
             ? "bg-indigo-50/10 border-indigo-200/50 cursor-not-allowed"
             : isDragActive

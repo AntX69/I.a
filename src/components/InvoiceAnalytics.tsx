@@ -200,7 +200,7 @@ export default function InvoiceAnalytics({
   });
 
   return (
-    <div className="bg-white/60 backdrop-blur-xl border border-slate-200/50 rounded-3xl p-6 shadow-xl shadow-slate-100/40 mb-8">
+    <div className="bg-white/60 backdrop-blur-xl border border-slate-200/50 rounded-2xl p-6 shadow-xl shadow-slate-100/40 mb-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
@@ -280,12 +280,12 @@ export default function InvoiceAnalytics({
                         {language === "ka" ? label.ka : label.en}
                       </span>
                       {isOver && (
-                        <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse flex items-center gap-0.5">
+                        <span className="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse flex items-center gap-0.5">
                           <AlertTriangle className="w-2.5 h-2.5" /> Over
                         </span>
                       )}
                     </div>
-                    <div className="flex justify-between text-[10px] text-slate-400 mb-2">
+                    <div className="flex justify-between text-xs text-slate-400 mb-2">
                       <span>{language === "ka" ? "ხარჯი:" : "Spend:"} {currentSpend.toFixed(2)}</span>
                     </div>
                   </div>
@@ -295,11 +295,11 @@ export default function InvoiceAnalytics({
                       type="number"
                       value={limit}
                       onChange={(e) => handleBudgetChange(cat, Number(e.target.value))}
-                      className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-400 focus:bg-white text-right"
+                      className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-indigo-400 focus:bg-white text-right"
                       placeholder="Limit"
                       min="0"
                     />
-                    <span className="text-[10px] font-bold text-slate-400">{selectedCurrency}</span>
+                    <span className="text-xs font-bold text-slate-400">{selectedCurrency}</span>
                   </div>
                 </div>
               );
@@ -315,7 +315,7 @@ export default function InvoiceAnalytics({
             <Coins className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               {language === "ka" ? "სრული კონსოლიდირებული ხარჯი" : "Consolidated Grand Total"}
             </p>
             <div className="flex items-baseline gap-1 mt-0.5">
@@ -324,7 +324,7 @@ export default function InvoiceAnalytics({
               </span>
               <span className="text-xs font-bold text-slate-500 uppercase">{selectedCurrency}</span>
             </div>
-            <p className="text-[9px] text-slate-400 font-medium mt-0.5">
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
               {language === "ka" 
                 ? "* ყველა ვალუტა კონვერტირებულია მიმდინარე კურსით (1 USD = 2.72₾, 1 EUR = 2.95₾)" 
                 : "* Converted all active currencies (1 USD = 2.72 GEL, 1 EUR = 2.95 GEL)"}
@@ -337,7 +337,7 @@ export default function InvoiceAnalytics({
             <DollarSign className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               {language === "ka" ? `პირდაპირი ხარჯი ${selectedCurrency}-ში` : `Direct spend in ${selectedCurrency}`}
             </p>
             <div className="flex items-baseline gap-1 mt-0.5">
@@ -346,7 +346,7 @@ export default function InvoiceAnalytics({
               </span>
               <span className="text-xs font-bold text-slate-500 uppercase">{selectedCurrency}</span>
             </div>
-            <p className="text-[9px] text-slate-400 font-medium mt-0.5">
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
               {language === "ka" ? `მხოლოდ ${selectedCurrency}-ში დაფიქსირებული ჩანაწერები` : `Considers only native ${selectedCurrency} bills`}
             </p>
           </div>
@@ -362,7 +362,7 @@ export default function InvoiceAnalytics({
           <div className="flex bg-slate-100 p-1 rounded-xl w-full mb-4">
             <button
               onClick={() => setActiveTab("categories")}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 activeTab === "categories"
                   ? "bg-white text-indigo-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
@@ -372,7 +372,7 @@ export default function InvoiceAnalytics({
             </button>
             <button
               onClick={() => setActiveTab("months")}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 activeTab === "months"
                   ? "bg-white text-indigo-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
@@ -432,7 +432,7 @@ export default function InvoiceAnalytics({
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
                       {hoveredCategory ? (
                         <>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                             {language === "ka" ? CATEGORY_LABELS[hoveredCategory].ka : CATEGORY_LABELS[hoveredCategory].en}
                           </span>
                           <span className="text-xs font-black text-slate-800 truncate max-w-[100px]">
@@ -441,13 +441,13 @@ export default function InvoiceAnalytics({
                         </>
                       ) : (
                         <>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                             {language === "ka" ? "სულ ჯამი" : "TOTAL"}
                           </span>
                           <span className="text-sm font-black text-indigo-600">
                             {totalCurrencySpend.toLocaleString(undefined, { maximumFractionDigits: 1 })}
                           </span>
-                          <span className="text-[9px] font-extrabold text-slate-400">{selectedCurrency}</span>
+                          <span className="text-xs font-extrabold text-slate-400">{selectedCurrency}</span>
                         </>
                       )}
                     </div>
@@ -466,11 +466,11 @@ export default function InvoiceAnalytics({
                           onMouseLeave={() => setHoveredCategory(null)}
                         >
                           <div className="w-2 rounded-full h-2 shrink-0" style={{ backgroundColor: seg.color }} />
-                          <div className="text-[11px] font-semibold text-slate-600 flex flex-col">
+                          <div className="text-xs font-semibold text-slate-600 flex flex-col">
                             <span className="font-extrabold text-slate-700 leading-tight">
                               {language === "ka" ? label.ka : label.en}
                             </span>
-                            <span className="text-[9px] text-slate-400">
+                            <span className="text-xs text-slate-400">
                               {(seg.percentage * 100).toFixed(1)}% ({seg.spend.toFixed(0)} {selectedCurrency})
                             </span>
                           </div>
@@ -518,7 +518,7 @@ export default function InvoiceAnalytics({
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100/50 w-10 text-center shrink-0">
+                          <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100/50 w-10 text-center shrink-0">
                             {overallPct.toFixed(0)}%
                           </span>
                         </div>
@@ -560,9 +560,9 @@ export default function InvoiceAnalytics({
                       
                       <div className="flex items-center gap-2">
                         <span className="text-slate-500">
-                          <span className="font-extrabold text-slate-800">{spend.toFixed(2)}</span> / {limit.toFixed(0)} <span className="text-[10px] text-slate-400">{selectedCurrency}</span>
+                          <span className="font-extrabold text-slate-800">{spend.toFixed(2)}</span> / {limit.toFixed(0)} <span className="text-xs text-slate-400">{selectedCurrency}</span>
                         </span>
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-lg border ${
+                        <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${
                           isOver 
                             ? "bg-red-50 border-red-200 text-red-600 animate-pulse" 
                             : pct > 80 
@@ -584,7 +584,7 @@ export default function InvoiceAnalytics({
 
                     {/* Overbudget Notification Alert */}
                     {isOver && (
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-red-600 bg-red-50/50 border border-red-100 rounded-lg px-2 py-0.5 animate-fadeIn">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50/50 border border-red-100 rounded-full px-3 py-1 animate-fadeIn w-fit">
                         <AlertTriangle className="w-3 h-3 text-red-500 shrink-0" />
                         <span>
                           {language === "ka" 
@@ -604,7 +604,7 @@ export default function InvoiceAnalytics({
             {Object.keys(categorySpends).every(cat => categorySpends[cat as ExpenseCategory] <= activeCurrencyBudgets[cat as ExpenseCategory]) ? (
               <>
                 <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
-                <p className="text-[11px] font-semibold text-slate-500">
+                <p className="text-xs font-semibold text-slate-500">
                   {language === "ka" 
                     ? "ყველა კატეგორია უსაფრთხო დიაპაზონშია. ხარჯები არ აჭარბებს ბიუჯეტებს!" 
                     : "Excellent financial health! All spending categories remain safely within budgets."}
@@ -613,7 +613,7 @@ export default function InvoiceAnalytics({
             ) : (
               <>
                 <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-                <p className="text-[11px] font-semibold text-slate-500">
+                <p className="text-xs font-semibold text-slate-500">
                   {language === "ka" 
                     ? "ზოგიერთ კატეგორიაში ლიმიტი ამოიწურა. გთხოვთ გადახედოთ ხარჯებს." 
                     : "Attention: Budget limits exceeded in some departments. Review spending logs."}

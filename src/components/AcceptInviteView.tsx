@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Building2, Mail, Lock, ShieldCheck, ArrowRight, AlertTriangle, CheckCircle2, Sparkles, Clock } from "lucide-react";
+import { Building2, Mail, Lock, ShieldCheck, ArrowRight, AlertTriangle, CheckCircle2, Sparkles, Clock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Language } from "../types";
 import { AuthUser } from "../hooks/useAuth";
 import { apiFetch, setSessionToken } from "../lib/api";
@@ -25,6 +25,7 @@ export default function AcceptInviteView({
   } | null>(null);
 
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,8 +62,8 @@ export default function AcceptInviteView({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password || password.length < 4) {
-      setError(language === "ka" ? "პაროლი უნდა შეიცავდეს მინიმუმ 4 სიმბოლოს" : "Password must be at least 4 characters");
+    if (!password || password.length < 8) {
+      setError(language === "ka" ? "პაროლი უნდა შეიცავდეს მინიმუმ 8 სიმბოლოს" : "Password must be at least 8 characters");
       return;
     }
 
@@ -85,7 +86,7 @@ export default function AcceptInviteView({
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 max-w-lg w-full shadow-2xl relative space-y-6">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-10 max-w-lg w-full shadow-2xl relative space-y-6">
         {/* Brand Top Badge */}
         <div className="text-center space-y-3">
           <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg shadow-indigo-600/30">
@@ -160,29 +161,50 @@ export default function AcceptInviteView({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-slate-700 block">
-                  {language === "ka" ? "დააყენეთ თქვენი პაროლი" : "Set Your Password"} *
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-200 block">
+                    {language === "ka" ? "დააყენეთ თქვენი პაროლი" : "Set Your Password"} *
+                  </label>
+                  <span className={`text-xs font-medium ${password.length >= 8 ? "text-emerald-500" : "text-slate-400"}`}>
+                    {language === "ka" ? "მინიმუმ 8 სიმბოლო" : "Min 8 characters"}
+                  </span>
+                </div>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
+                    minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white pl-9"
+                    className="w-full h-11 pl-9 pr-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800"
                   />
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
+                {error && (
+                  <p className="text-xs text-rose-500 font-medium mt-1 animate-fadeIn">
+                    {error}
+                  </p>
+                )}
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99]"
+                className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
-                  <Clock className="w-4 h-4 animate-spin" />
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{language === "ka" ? "მუშავდება..." : "Processing..."}</span>
+                  </>
                 ) : (
                   <>
                     <span>{language === "ka" ? "მოწვევის მიღება და შესვლა" : "Accept Invite & Continue"}</span>
