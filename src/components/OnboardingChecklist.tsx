@@ -57,6 +57,17 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
   const [isHidingAfterCelebration, setIsHidingAfterCelebration] = useState<boolean>(false);
 
+  // Re-read state when userIdOrCompany resolves (fixes refresh losing onboarding state)
+  useEffect(() => {
+    if (!userIdOrCompany || userIdOrCompany === "default") return;
+    try {
+      const dismissed = localStorage.getItem(`antx_onboarding_dismissed_${userIdOrCompany}`) === "true";
+      const completed = localStorage.getItem(`antx_onboarding_completed_${userIdOrCompany}`) === "true";
+      setIsDismissed(dismissed);
+      setIsPermanentlyCompleted(completed);
+    } catch (_) {}
+  }, [userIdOrCompany]);
+
   // Define steps
   // 1. Account created (always done)
   // 2. Upload first invoice (invoicesCount > 0)

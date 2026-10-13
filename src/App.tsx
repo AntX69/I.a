@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { apiFetch } from "./lib/api";
 import { 
@@ -169,22 +169,38 @@ export default function App() {
     ...rawPermissions,
   };
 
+  const isInitialHashHandled = useRef(false);
+
   // Sync URL hash with currentView for navigation and back/forward browser buttons
   useEffect(() => {
     if (!isAuthenticated || !user?.company_id) return;
     
+    let targetHash = "";
     if (currentView === "dashboard") {
-      if (window.location.hash !== "#overview") {
-        window.history.replaceState(null, "", "#overview");
-      }
+      targetHash = "#overview";
     } else if (currentView === "invoices") {
-      if (window.location.hash !== "#invoices") {
-        window.history.replaceState(null, "", "#invoices");
-      }
+      targetHash = "#invoices";
     } else if (currentView === "analytics") {
-      if (window.location.hash !== "#analytics") {
-        window.history.replaceState(null, "", "#analytics");
+      targetHash = "#analytics";
+    } else if (currentView === "team") {
+      targetHash = "#team";
+    } else if (currentView === "settings") {
+      targetHash = "#settings";
+    }
+
+    if (!targetHash) return;
+
+    if (window.location.hash.toLowerCase() !== targetHash) {
+      if (!isInitialHashHandled.current) {
+        // Initial setup upon page entry uses replaceState so history is clean
+        window.history.replaceState(null, "", targetHash);
+        isInitialHashHandled.current = true;
+      } else {
+        // Navigating between pages uses pushState so Back button works within the app
+        window.history.pushState(null, "", targetHash);
       }
+    } else {
+      isInitialHashHandled.current = true;
     }
   }, [currentView, isAuthenticated, user?.company_id]);
 
@@ -202,6 +218,10 @@ export default function App() {
         setCurrentView("invoices");
       } else if (hash === "#analytics") {
         setCurrentView("analytics");
+      } else if (hash === "#team") {
+        setCurrentView("team");
+      } else if (hash === "#settings") {
+        setCurrentView("settings");
       }
     };
 
@@ -414,6 +434,7 @@ export default function App() {
   const [editingWorkspaceName, setEditingWorkspaceName] = useState<string>("");
   const [showManualInvoiceModal, setShowManualInvoiceModal] = useState(false);
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeRole, setActiveRole] = useState<UserRole>("admin");
 
@@ -427,6 +448,21 @@ export default function App() {
       setCurrentView("dashboard");
     }
   }, [user, activePlan, currentView]);
+
+  // Close header dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-dropdown-container]")) {
+        setShowWorkspaceDropdown(false);
+        setShowSettingsDropdown(false);
+      }
+    };
+    if (showWorkspaceDropdown || showSettingsDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showWorkspaceDropdown, showSettingsDropdown]);
 
   const defaultRolePermissions: Record<UserRole, RolePermissions> = {
     admin: { canUpload: true, viewAnalytics: true, manageBudgets: true, canDelete: true },
@@ -493,8 +529,8 @@ export default function App() {
   const markExportCompleted = () => {
     setHasExported(true);
     try {
-      const key = `antx_onboarding_exported_${user?.company_id || "default"}`;
-      localStorage.setItem(key, "true");
+      const id = user?.company_id || user?.id || "default";
+      localStorage.setItem(`antx_onboarding_exported_${id}`, "true");
     } catch (_) {}
   };
 
@@ -512,11 +548,32 @@ export default function App() {
     setBudgets(newBudgets);
   };
 
+  // Re-read onboarding states when user/company resolves on refresh
+  useEffect(() => {
+    const id = user?.company_id || user?.id;
+    if (!id) return;
+    try {
+      const expKey = `antx_onboarding_exported_${id}`;
+      const defaultExpKey = "antx_onboarding_exported_default";
+      const isExp =
+        localStorage.getItem(expKey) === "true" ||
+        localStorage.getItem(defaultExpKey) === "true";
+      setHasExported(isExp);
+
+      const budgetKey = `antx_onboarding_budget_customized_${id}`;
+      const defaultBudgetKey = "antx_onboarding_budget_customized_default";
+      const isBudget =
+        localStorage.getItem(budgetKey) === "true" ||
+        localStorage.getItem(defaultBudgetKey) === "true";
+      setHasCustomBudget(isBudget);
+    } catch (_) {}
+  }, [user?.company_id, user?.id]);
+
   const handleBudgetEditedByUser = () => {
     setHasCustomBudget(true);
     try {
-      const key = `antx_onboarding_budget_customized_${user?.company_id || "default"}`;
-      localStorage.setItem(key, "true");
+      const id = user?.company_id || user?.id || "default";
+      localStorage.setItem(`antx_onboarding_budget_customized_${id}`, "true");
     } catch (_) {}
   };
 
@@ -1895,27 +1952,28 @@ export default function App() {
           : "bg-white/60 border-slate-200/60 text-slate-900"
       }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
-          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+          {/* Left: Logo & Name (Name hidden on <1280px per requirements) */}
+          <div className="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
             <div className="p-2 sm:p-2.5 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-100 dark:shadow-indigo-900/20 shrink-0">
               <Sparkles className="w-4 h-4 sm:w-5 h-5" />
             </div>
-            <div className="min-w-0">
+            <div className="hidden xl:block min-w-0">
               <h1 id="app-title" className={`font-bold text-sm sm:text-base lg:text-lg leading-none truncate ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                 {t.title}
               </h1>
-              <p className={`text-[11px] mt-1 hidden lg:block truncate ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
+              <p className={`text-[11px] mt-1 truncate ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
                 {language === "ka" ? "ინვოისებისა და ხარჯების ჭკვიანი ანალიზი" : "Intelligent invoice & expense management"}
               </p>
             </div>
           </div>
 
-          {/* Desktop Navigation Tabs: მიმოხილვა · ინვოისები · ანალიტიკა · გუნდი */}
+          {/* Center: Navigation Tabs (მიმოხილვა · ინვოისები · ანალიტიკა · გუნდი) */}
           {currentUser && (
-            <nav className="hidden lg:flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
+            <nav className="hidden md:flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-xs shrink-0">
               <button
                 type="button"
                 onClick={() => setCurrentView("dashboard")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   currentView === "dashboard"
                     ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -1926,7 +1984,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setCurrentView("invoices")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   currentView === "invoices"
                     ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -1937,7 +1995,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setCurrentView("analytics")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   currentView === "analytics"
                     ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -1949,7 +2007,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setCurrentView("team")}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     currentView === "team"
                       ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -1962,23 +2020,26 @@ export default function App() {
             </nav>
           )}
 
-          {/* Full Desktop Controls (visible on xl screens, 1280px+) */}
-          <div className="hidden xl:flex items-center space-x-3 shrink-0">
-            {/* Workspace Switcher */}
-            <div className="relative">
+          {/* Right: სამუშაო სივრცე · ტარიფის ბეჯი · ⚙ · გამოსვლა */}
+          <div className="hidden md:flex items-center space-x-2 sm:space-x-2.5 shrink-0">
+            {/* 1. Workspace Switcher */}
+            <div className="relative" data-dropdown-container>
               <button
-                onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
+                onClick={() => {
+                  setShowWorkspaceDropdown(!showWorkspaceDropdown);
+                  setShowSettingsDropdown(false);
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
               >
-                <Briefcase className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="max-w-[100px] truncate">{activeWorkspace}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <Briefcase className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span className="max-w-[80px] sm:max-w-[110px] truncate">{activeWorkspace}</span>
+                <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
               </button>
 
               {showWorkspaceDropdown && (
-                <div className="absolute right-0 mt-2 w-68 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 animate-fadeIn">
-                  <div className="px-3.5 py-2.5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
-                    <span>{language === "ka" ? "სამუშაო სივრცეები" : "Workspaces / Entities"}</span>
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 animate-fadeIn">
+                  <div className="px-3.5 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
+                    <span>{language === "ka" ? "სამუშაო სივრცეები" : "Workspaces"}</span>
                   </div>
                   <div className="max-h-56 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/50">
                     {workspaces.map((ws, index) => {
@@ -2075,7 +2136,6 @@ export default function App() {
                                 {ws}
                               </button>
                               <div className="flex items-center gap-1 shrink-0">
-                                {/* Edit Button */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -2087,7 +2147,6 @@ export default function App() {
                                 >
                                   <Edit className="w-3 h-3" />
                                 </button>
-                                {/* Delete Button */}
                                 {workspaces.length > 1 && (
                                   <button
                                     onClick={(e) => {
@@ -2150,44 +2209,11 @@ export default function App() {
                       )}
                     </div>
                   </div>
-
-                  {/* Dark & Light Theme Switcher inside Dropdown */}
-                  <div className="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
-                    <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
-                      <span>{language === "ka" ? "თემა / რეჟიმი" : "Theme / Appearance"}</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
-                      <button
-                        type="button"
-                        onClick={() => setIsDarkMode(false)}
-                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          !isDarkMode
-                            ? "bg-white dark:bg-slate-900 text-indigo-600 shadow-xs border border-slate-200/60 dark:border-slate-700"
-                            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                        }`}
-                      >
-                        <Sun className="w-3.5 h-3.5 text-amber-500" />
-                        <span>{language === "ka" ? "დღის" : "Light"}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsDarkMode(true)}
-                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          isDarkMode
-                            ? "bg-slate-900 text-amber-400 shadow-xs border border-slate-700"
-                            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                        }`}
-                      >
-                        <Moon className="w-3.5 h-3.5 text-amber-400" />
-                        <span>{language === "ka" ? "ღამის" : "Dark"}</span>
-                      </button>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
-            
-            {/* Active Pricing Plan Badge */}
+
+            {/* 2. Active Pricing Plan Badge */}
             {activePlan && (
               <div className="flex items-center px-2.5 py-1 bg-indigo-50/60 dark:bg-slate-800 border border-indigo-100/40 dark:border-slate-700 rounded-xl text-xs font-bold shadow-xs shrink-0">
                 <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider ${
@@ -2202,145 +2228,57 @@ export default function App() {
               </div>
             )}
 
-            {/* Theme Toggle & Language Switcher */}
-            <div className="flex items-center gap-2">
-              {/* Dark / Light Mode Segment Pill */}
-              <div className="flex bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700 shadow-xs">
-                <button
-                  onClick={() => setIsDarkMode(false)}
-                  className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
-                    !isDarkMode
-                      ? "bg-white shadow-xs text-indigo-600"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                  }`}
-                  title={language === "ka" ? "დღის რეჟიმი" : "Light Mode"}
-                >
-                  <Sun className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="text-[11px]">{language === "ka" ? "დღის" : "Light"}</span>
-                </button>
-                <button
-                  onClick={() => setIsDarkMode(true)}
-                  className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
-                    isDarkMode
-                      ? "bg-slate-900 shadow-xs text-amber-400 border border-slate-700/80"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                  }`}
-                  title={language === "ka" ? "ღამის რეჟიმი (მუქი ფონი)" : "Dark Mode"}
-                >
-                  <Moon className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-[11px]">{language === "ka" ? "ღამის" : "Dark"}</span>
-                </button>
-              </div>
-
-              <div className="flex bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700 shadow-xs">
-                <button
-                  onClick={() => setLanguage("ka")}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer ${language === "ka" ? "bg-white dark:bg-slate-700 shadow-xs text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"}`}
-                >
-                  ქართული
-                </button>
-                <button
-                  onClick={() => setLanguage("en")}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer ${language === "en" ? "bg-white dark:bg-slate-700 shadow-xs text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"}`}
-                >
-                  English
-                </button>
-              </div>
-
-              {/* Team Management Button (Only on Multi Plan) */}
-              {currentUser && userPermissions.manageTeam && activePlan === "multi" && (
-                <button
-                  onClick={() => setCurrentView(currentView === "team" ? "dashboard" : "team")}
-                  className={`px-3 py-1.5 border rounded-full transition-all cursor-pointer shadow-sm shrink-0 flex items-center justify-center gap-1.5 text-xs font-bold ${
-                    currentView === "team"
-                      ? "bg-indigo-50 border-indigo-200 text-indigo-600"
-                      : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200/50"
-                  }`}
-                  title={language === "ka" ? "გუნდის მართვა" : "Team Management"}
-                >
-                  <Users className="w-4 h-4 text-indigo-600" />
-                  <span>{language === "ka" ? "გუნდი" : "Team"}</span>
-                </button>
-              )}
-
-              {/* Settings Page Mockup Button */}
-              {currentUser && (
-                <button
-                  onClick={() => setCurrentView(currentView === "settings" ? "dashboard" : "settings")}
-                  className={`p-1.5 border rounded-full transition-all cursor-pointer shadow-sm shrink-0 flex items-center justify-center ${
-                    currentView === "settings"
-                      ? "bg-indigo-50 border-indigo-200 text-indigo-600"
-                      : "bg-slate-50 hover:bg-slate-100 text-slate-500 border-slate-200/50"
-                  }`}
-                  title={language === "ka" ? "პარამეტრები" : "Settings"}
-                >
-                  <Settings className="w-4 h-4" />
-                </button>
-              )}
-
-              {/* Logout Button */}
-              {currentUser && (
-                <button
-                  onClick={handleMockLogout}
-                  className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/50 rounded-full transition-all cursor-pointer shadow-sm shrink-0 flex items-center justify-center"
-                  title={language === "ka" ? "გამოსვლა" : "Log Out"}
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Compact Tablet Controls (visible on md to xl screens: 768px - 1279px) */}
-          <div className="hidden md:flex xl:hidden items-center space-x-2 shrink-0">
-            {/* Compact Workspace Switcher */}
-            <div className="relative">
+            {/* 3. ⚙ Settings Dropdown Menu (Contains Settings link, Theme toggle, Language toggle) */}
+            <div className="relative" data-dropdown-container>
               <button
-                onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
-                title={language === "ka" ? `სივრცე: ${activeWorkspace}` : `Workspace: ${activeWorkspace}`}
+                onClick={() => {
+                  setShowSettingsDropdown(!showSettingsDropdown);
+                  setShowWorkspaceDropdown(false);
+                }}
+                className={`p-1.5 rounded-xl border transition-all cursor-pointer shadow-xs flex items-center justify-center ${
+                  showSettingsDropdown || currentView === "settings"
+                    ? "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400"
+                    : "bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                }`}
+                title={language === "ka" ? "პარამეტრები" : "Settings"}
               >
-                <Briefcase className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                <span className="max-w-[75px] truncate">{activeWorkspace}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
+                <Settings className="w-4 h-4" />
               </button>
 
-              {showWorkspaceDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 animate-fadeIn">
-                  <div className="px-3 py-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
-                    {language === "ka" ? "სამუშაო სივრცეები" : "Workspaces"}
-                  </div>
-                  <div className="max-h-52 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/50">
-                    {workspaces.map((ws) => (
-                      <button
-                        key={ws}
-                        onClick={() => {
-                          handleWorkspaceSelect(ws);
-                          setShowWorkspaceDropdown(false);
-                        }}
-                        className={`w-full px-3 py-2 text-xs text-left font-bold truncate cursor-pointer transition-colors ${
-                          activeWorkspace === ws
-                            ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400"
-                            : "hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200"
-                        }`}
-                      >
-                        {ws}
-                      </button>
-                    ))}
-                  </div>
+              {showSettingsDropdown && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-2 space-y-2 animate-fadeIn text-xs">
+                  {/* Settings Page Button */}
+                  {currentUser && (
+                    <button
+                      onClick={() => {
+                        setCurrentView("settings");
+                        setShowSettingsDropdown(false);
+                      }}
+                      className={`w-full px-3 py-2 rounded-xl text-left font-bold flex items-center gap-2.5 transition-colors cursor-pointer ${
+                        currentView === "settings"
+                          ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      <Settings className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                      <span>{language === "ka" ? "პარამეტრები" : "Settings"}</span>
+                    </button>
+                  )}
 
-                  {/* Dark & Light Theme Switcher inside Dropdown */}
-                  <div className="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
-                    <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
-                      <span>{language === "ka" ? "თემა / რეჟიმი" : "Theme Mode"}</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
+                  <div className="border-t border-slate-100 dark:border-slate-800" />
+
+                  {/* Theme Switcher */}
+                  <div className="px-1 py-0.5 space-y-1.5">
+                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                      {language === "ka" ? "თემა / რეჟიმი" : "Theme Mode"}
+                    </span>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                       <button
                         type="button"
                         onClick={() => setIsDarkMode(false)}
-                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           !isDarkMode
-                            ? "bg-white dark:bg-slate-900 text-indigo-600 shadow-xs border border-slate-200/60 dark:border-slate-700"
+                            ? "bg-white dark:bg-slate-900 text-indigo-600 shadow-xs"
                             : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                         }`}
                       >
@@ -2350,7 +2288,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setIsDarkMode(true)}
-                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           isDarkMode
                             ? "bg-slate-900 text-amber-400 shadow-xs border border-slate-700"
                             : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
@@ -2361,63 +2299,48 @@ export default function App() {
                       </button>
                     </div>
                   </div>
+
+                  <div className="border-t border-slate-100 dark:border-slate-800" />
+
+                  {/* Language Switcher */}
+                  <div className="px-1 py-0.5 space-y-1.5">
+                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                      {language === "ka" ? "ენა" : "Language"}
+                    </span>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => setLanguage("ka")}
+                        className={`py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
+                          language === "ka"
+                            ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                        }`}
+                      >
+                        ქართული
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLanguage("en")}
+                        className={`py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
+                          language === "en"
+                            ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                        }`}
+                      >
+                        English
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Quick Dark Mode Icon Toggle */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs transition-all cursor-pointer"
-              title={isDarkMode ? "Light Mode" : "Dark Mode"}
-            >
-              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
-            </button>
-
-            {/* Quick Language Toggle */}
-            <button
-              onClick={() => setLanguage(language === "ka" ? "en" : "ka")}
-              className="px-2 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
-              title={language === "ka" ? "Switch to English" : "ქართულზე გადართვა"}
-            >
-              {language === "ka" ? "EN" : "KA"}
-            </button>
-
-            {/* Team Management (Icon only) */}
-            {currentUser && userPermissions.manageTeam && activePlan === "multi" && (
-              <button
-                onClick={() => setCurrentView(currentView === "team" ? "dashboard" : "team")}
-                className={`p-1.5 border rounded-xl transition-all cursor-pointer shadow-xs ${
-                  currentView === "team"
-                    ? "bg-indigo-50 border-indigo-200 text-indigo-600"
-                    : "bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
-                }`}
-                title={language === "ka" ? "გუნდის მართვა" : "Team Management"}
-              >
-                <Users className="w-4 h-4 text-indigo-600" />
-              </button>
-            )}
-
-            {/* Settings Button */}
-            {currentUser && (
-              <button
-                onClick={() => setCurrentView(currentView === "settings" ? "dashboard" : "settings")}
-                className={`p-1.5 border rounded-xl transition-all cursor-pointer shadow-xs ${
-                  currentView === "settings"
-                    ? "bg-indigo-50 border-indigo-200 text-indigo-600"
-                    : "bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700"
-                }`}
-                title={language === "ka" ? "პარამეტრები" : "Settings"}
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Logout Button */}
+            {/* 4. Logout Button */}
             {currentUser && (
               <button
                 onClick={handleMockLogout}
-                className="p-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 border border-rose-200/50 dark:border-rose-900 rounded-xl transition-all cursor-pointer shadow-xs"
+                className="p-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 border border-rose-200/50 dark:border-rose-900 rounded-xl transition-all cursor-pointer shadow-xs shrink-0 flex items-center justify-center"
                 title={language === "ka" ? "გამოსვლა" : "Log Out"}
               >
                 <LogOut className="w-4 h-4" />
@@ -2937,6 +2860,7 @@ export default function App() {
             activePlan={activePlan}
             userEmail={currentUser?.email || ""}
             userCompany={userCompany}
+            userIdOrCompany={user?.company_id || user?.id || userCompany || currentUser?.email || "default"}
             hasCustomBudget={hasCustomBudget}
             teamMembersCount={teamMembersCount}
             hasExported={hasExported}

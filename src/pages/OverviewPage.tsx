@@ -28,12 +28,13 @@ import OnboardingChecklist from "../components/OnboardingChecklist";
 
 export interface OverviewPageProps {
   language: Language;
-  invoices: ExtractedInvoice[]; // already filtered for active workspace
-  allInvoices: ExtractedInvoice[]; // all invoices across app if needed
+  invoices: ExtractedInvoice[];
+  allInvoices: ExtractedInvoice[];
   budgets: Record<string, Record<ExpenseCategory, number>>;
   activePlan: "single" | "multi" | null;
   userEmail: string;
   userCompany: string;
+  userIdOrCompany?: string;
   hasCustomBudget: boolean;
   teamMembersCount: number;
   hasExported: boolean;
@@ -54,6 +55,7 @@ export default function OverviewPage({
   activePlan,
   userEmail,
   userCompany,
+  userIdOrCompany,
   hasCustomBudget,
   teamMembersCount,
   hasExported,
@@ -244,7 +246,7 @@ export default function OverviewPage({
         teamMembersCount={teamMembersCount}
         hasExported={hasExported}
         isMultiPlan={activePlan === "multi"}
-        userIdOrCompany={userCompany || userEmail || "default"}
+        userIdOrCompany={userIdOrCompany || userCompany || userEmail || "default"}
         onNavigateToUpload={() => onNavigateToView("invoices")}
         onNavigateToBudget={() => onNavigateToView("analytics")}
         onNavigateToTeam={() => {
